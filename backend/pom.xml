@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -11,120 +11,24 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.miempresa.miproyecto</groupId>
-    <artifactId>mi-proyecto-backend</artifactId>
+    <groupId>com.marcablanca.platform</groupId>
+    <artifactId>marca-blanca-backend</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>mi-proyecto-backend</name>
 
-    <modules>
-        <module>app-common</module>
-        <module>app-core</module>
-        <module>app-security</module>
-        <module>app-api</module>
-    </modules>
+    <name>marca-blanca-backend</name>
+    <description>Backend unico, organizado por modulo de negocio, marca blanca</description>
 
     <properties>
         <java.version>25</java.version>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <springdoc.version>2.7.0</springdoc.version>
-        <jjwt.version>0.12.6</jjwt.version>
-        <jacoco.version>0.8.13</jacoco.version>
-
-        <sonar.projectKey>mi-proyecto-backend</sonar.projectKey>
-        <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
-        <sonar.coverage.jacoco.xmlReportPaths>app-common/target/site/jacoco/jacoco.xml,app-core/target/site/jacoco/jacoco.xml,app-security/target/site/jacoco/jacoco.xml,app-api/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <maven.compiler.release>25</maven.compiler.release>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.miempresa.miproyecto</groupId>
-                <artifactId>app-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.miempresa.miproyecto</groupId>
-                <artifactId>app-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.miempresa.miproyecto</groupId>
-                <artifactId>app-security</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-api</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-impl</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-jackson</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>${springdoc.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <configuration>
-                        <release>${java.version}</release>
-                        <annotationProcessorPaths>
-                            <path>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok</artifactId>
-                                <version>${lombok.version}</version>
-                            </path>
-                        </annotationProcessorPaths>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.jacoco</groupId>
-                    <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>${jacoco.version}</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>jacoco-prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>jacoco-report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <modules>
+        <module>shared-kernel</module>
+        <module>usuarios</module>
+        <module>omnicanal</module>
+        <module>bootstrap</module>
+    </modules>
 
 </project>
