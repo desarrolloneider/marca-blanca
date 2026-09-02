@@ -1,12 +1,13 @@
 package com.marcablanca.platform.usuarios.application;
 
-import com.marcablanca.platform.usuarios.domain.CifradorDeContrasenas;
+import com.marcablanca.platform.usuarios.application.port.in.AutenticarUsuario;
+import com.marcablanca.platform.usuarios.application.port.out.GeneradorDeToken;
 import com.marcablanca.platform.usuarios.domain.Contrasena;
 import com.marcablanca.platform.usuarios.domain.Correo;
 import com.marcablanca.platform.usuarios.domain.CredencialesInvalidasException;
-import com.marcablanca.platform.usuarios.domain.GeneradorDeToken;
-import com.marcablanca.platform.usuarios.domain.RepositorioUsuarios;
 import com.marcablanca.platform.usuarios.domain.Usuario;
+import com.marcablanca.platform.usuarios.domain.port.out.CifradorDeContrasenas;
+import com.marcablanca.platform.usuarios.domain.port.out.RepositorioUsuarios;
 
 /** Orquesta el login. No decide reglas de negocio: eso vive en Usuario.verificarCredenciales(). */
 public class AutenticarUsuarioService implements AutenticarUsuario {

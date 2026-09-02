@@ -1,5 +1,7 @@
 package com.marcablanca.platform.usuarios.domain;
 
+import com.marcablanca.platform.usuarios.domain.port.out.CifradorDeContrasenas;
+
 import java.util.UUID;
 
 public class Usuario {
@@ -16,6 +18,7 @@ public class Usuario {
         this.estado = estado;
     }
 
+    /** Regla de negocio central del login: valida estado y credenciales, o lanza la excepcion que corresponda. */
     public void verificarCredenciales(Contrasena contrasenaCandidata, CifradorDeContrasenas cifrador) {
         if (estado != EstadoUsuario.ACTIVO) {
             throw new UsuarioNoDisponibleException(estado);

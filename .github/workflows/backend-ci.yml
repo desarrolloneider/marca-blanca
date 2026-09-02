@@ -77,6 +77,11 @@ jobs:
           java-version: "25"
           cache: maven
 
+      - name: Add Maven to PATH
+        shell: powershell
+        run: |
+          echo "C:\Users\HP VICTUS\Pictures\apache-maven-3.9.16-bin\apache-maven-3.9.16\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build, test & analyze
         if: ${{ vars.SONAR_HOST_URL != '' }}
         run: >

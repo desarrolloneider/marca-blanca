@@ -1,6 +1,6 @@
 package com.marcablanca.platform.usuarios.infrastructure.seguridad;
 
-import com.marcablanca.platform.usuarios.domain.GeneradorDeToken;
+import com.marcablanca.platform.usuarios.application.port.out.GeneradorDeToken;
 import com.marcablanca.platform.usuarios.domain.Usuario;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
