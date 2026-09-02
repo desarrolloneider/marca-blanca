@@ -1,0 +1,7 @@
+@if (cargando()) {
+  <p>Cargando…</p>
+} @else if (tarea(); as t) {
+  <h2>{{ t.titulo }}</h2>
+  <p>{{ t.descripcion }}</p>
+  <p>Estado: {{ t.estado }} — Prioridad: {{ t.prioridad }}</p>
+}

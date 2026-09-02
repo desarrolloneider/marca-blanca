@@ -1,26 +1,27 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth/auth.guard';
+import { authGuard } from './core/guards/auth.guard';
+import { ListaTareas } from './features/tareas/pages/lista-tareas/lista-tareas';
+import { DetalleTarea } from './features/tareas/pages/detalle-tarea/detalle-tarea';
+import { Login } from './features/auth/pages/login/login';
 
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent),
+    component: Login,
   },
   {
-    path: 'register',
-    loadComponent: () =>
-      import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
+    path: 'tareas',
+    component: ListaTareas,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'tareas/:id',
+    component: DetalleTarea,
+    canActivate: [authGuard],
   },
   {
     path: '',
-    loadComponent: () => import('./layout/shell.component').then((m) => m.ShellComponent),
-    canActivate: [authGuard],
-    children: [
-      {
-        path: '',
-        loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
-      },
-    ],
+    redirectTo: 'tareas',
+    pathMatch: 'full',
   },
-  { path: '**', redirectTo: '' },
 ];

@@ -1,0 +1,26 @@
+@if (cargando()) {
+  <p>Cargando tareas…</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Título</th>
+        <th>Estado</th>
+        <th>Prioridad</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (tarea of tareas(); track tarea.id) {
+        <tr>
+          <td>{{ tarea.titulo }}</td>
+          <td>{{ tarea.estado }}</td>
+          <td>{{ tarea.prioridad }}</td>
+          <td><a [routerLink]="['/tareas', tarea.id]">Ver detalle</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

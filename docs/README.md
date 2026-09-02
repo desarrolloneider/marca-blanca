@@ -5,6 +5,7 @@
 ## Cómo navegar
 
 - [`00-arquitectura-hexagonal.md`](./00-arquitectura-hexagonal.md) — punto de partida. Explica la estructura del proyecto (arquitectura hexagonal), transversal a todos los módulos.
+- [`03-docker-y-runner-local.md`](./03-docker-y-runner-local.md) — cómo levantar el proyecto con Docker y cómo está configurado el runner self-hosted de CI/CD.
 - [`decisiones/`](./decisiones/) — registro de decisiones de arquitectura (ADR), una por cada decisión real tomada durante el desarrollo.
 - [`modulos/`](./modulos/) — documentación específica de cada módulo del sistema.
 - [`openapi/`](./openapi/) — especificación de la API.
