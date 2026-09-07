@@ -24,6 +24,7 @@ public record RegistrarEmpresaRequest(
         @Size(max = 200)
         String nombreComercial,
 
+        @NotBlank
         @Size(max = 191)
         String dominio,
 

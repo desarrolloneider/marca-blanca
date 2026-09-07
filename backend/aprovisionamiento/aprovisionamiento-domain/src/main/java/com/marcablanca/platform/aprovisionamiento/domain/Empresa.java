@@ -54,6 +54,9 @@ public class Empresa {
         if (nombreLegal == null || nombreLegal.isBlank()) {
             throw new IllegalArgumentException("El nombre legal es obligatorio.");
         }
+        if (dominio == null || dominio.isBlank()) {
+            throw new IllegalArgumentException("El dominio es obligatorio.");
+        }
 
         Empresa empresa = new Empresa(
                 UUID.randomUUID(),

@@ -82,10 +82,7 @@ class EjecutorDdlPostgres implements PasosDeAprovisionamiento {
         String nombreBd = empresa.getIdentificador().nombreBaseDeDatos();
         JdbcTemplate cliente = jdbcCliente(nombreBd);
 
-        // Convencion estable y siempre valida para el VO Correo de usuarios (no acepta
-        // subdominios). El campo `dominio` es la web publica de la empresa, no un
-        // dominio de correo: no se usa aca.
-        String correoAdmin = "admin@" + empresa.getIdentificador().valor() + ".local";
+        String correoAdmin = "admin@" + empresa.getDominio();
         String nombreComercial = empresa.getNombreComercial() != null
                 ? empresa.getNombreComercial()
                 : empresa.getNombreLegal();
