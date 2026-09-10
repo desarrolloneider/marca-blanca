@@ -52,8 +52,8 @@ import { MatButtonModule } from '@angular/material/button';
 
             <div class="solution-grid-dark">
               <a routerLink="/modulos/omnicanal" class="solution-card-dark violet">
-                <div class="icon-box"><mat-icon>support_agent</mat-icon></div>
-                <h3>Comunicación<br />omnicanal</h3>
+                <div class="icon-box"><mat-icon>insights</mat-icon></div>
+                <h3>Liwa: analítica<br />con IA</h3>
                 <span>Conocer solución <mat-icon>arrow_forward</mat-icon></span>
               </a>
               <a routerLink="/modulos/pbx-3cx" class="solution-card-dark blue">

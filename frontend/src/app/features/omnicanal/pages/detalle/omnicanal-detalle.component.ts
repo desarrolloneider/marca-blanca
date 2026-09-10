@@ -3,38 +3,51 @@ import { ModuloDetalleComponent, DatoModuloDetalle } from '../../../../shared/co
 
 const DATO: DatoModuloDetalle = {
   codigo: 'omnicanal',
-  eyebrow: 'MÓDULO DE COMUNICACIÓN',
-  nombre: 'Omnicanal',
-  descripcion: 'Gestiona la comunicación con tus clientes desde todos los canales, en un solo lugar.',
-  icono: 'support_agent',
+  eyebrow: 'ANALÍTICA DE CONVERSACIONES CON IA',
+  nombre: 'Liwa',
+  descripcion:
+    'Convierte cada chat de WhatsApp en datos accionables. En vez de que un supervisor lea conversación por conversación, la IA analiza automáticamente cada caso archivado y extrae motivo de contacto, sentimiento, resolución, abandono y oportunidades de venta.',
+  icono: 'insights',
   colorPrincipal: 'violeta',
   highlights: [
-    { icono: 'inbox', texto: 'Una sola bandeja de entrada' },
-    { icono: 'chat', texto: 'WhatsApp, chat web y correo' },
-    { icono: 'history', texto: 'Historial por cliente' },
+    { icono: 'auto_awesome', texto: 'Análisis automático con IA' },
+    { icono: 'leaderboard', texto: 'Ranking objetivo por asesor' },
+    { icono: 'campaign', texto: 'ROI de tus anuncios de Meta' },
   ],
   caracteristicas: [
     {
-      icono: 'forum',
+      icono: 'visibility',
       color: 'violeta',
-      titulo: 'Atención unificada',
-      descripcion: 'Todas las conversaciones de tus clientes centralizadas en una sola bandeja de entrada.',
+      titulo: 'Visibilidad total del servicio',
+      descripcion: 'Sabe en tiempo real cuántas conversaciones hay, cómo van y dónde están los cuellos de botella, sin auditar manualmente.',
     },
     {
-      icono: 'hub',
+      icono: 'leaderboard',
       color: 'azul',
-      titulo: 'Múltiples canales',
-      descripcion: 'WhatsApp, chat web, correo y más, conectados a un mismo flujo de atención.',
+      titulo: 'Desempeño por asesor',
+      descripcion: 'Ranking objetivo de quién resuelve bien, quién genera abandono y quién convierte oportunidades de venta.',
     },
     {
-      icono: 'history',
+      icono: 'troubleshoot',
       color: 'verde',
-      titulo: 'Historial centralizado',
-      descripcion: 'El historial completo de cada cliente disponible para todo tu equipo de atención.',
+      titulo: 'Causa raíz del abandono',
+      descripcion: 'No solo cuánta gente se va sin resolver, sino si fue porque el cliente se cansó o porque el asesor lo dejó colgado.',
+    },
+    {
+      icono: 'campaign',
+      color: 'violeta',
+      titulo: 'ROI de pauta publicitaria',
+      descripcion: 'Separa las conversaciones que vinieron de Meta Ads del resto y muestra qué tan bien se atienden esos leads.',
+    },
+    {
+      icono: 'support_agent',
+      color: 'azul',
+      titulo: 'Indicadores tipo call center',
+      descripcion: 'FCR, esfuerzo del cliente y sentimiento aplicados a WhatsApp, con dashboards en vivo sin refrescar.',
     },
   ],
-  ctaTitulo: 'Centraliza la atención a tus clientes hoy mismo.',
-  ctaDescripcion: 'Actívalo desde el wizard de registro o desde "Mis módulos" si tu empresa ya tiene una cuenta.',
+  ctaTitulo: 'El historial de WhatsApp, convertido en panel de control gerencial.',
+  ctaDescripcion: 'Con inteligencia artificial incluida — actívalo desde el wizard de registro o desde "Mis módulos" si tu empresa ya tiene una cuenta.',
 };
 
 @Component({
