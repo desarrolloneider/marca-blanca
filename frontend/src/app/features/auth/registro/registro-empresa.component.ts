@@ -161,54 +161,41 @@ interface EstadoWizardGuardado {
   ],
   template: `
     <div class="registro-page">
-      <div class="cabecera-fija">
-        <header class="topbar">
-          <div class="topbar-left">
-            <a routerLink="/" class="topbar-logo">
-              <mat-icon class="topbar-logo-icon">hub</mat-icon>
-              <span>Marca Blanca</span>
-            </a>
-          </div>
-          <a routerLink="/login" class="topbar-link">Ya tengo cuenta</a>
-        </header>
+      <aside class="wizard-banda">
+        <div class="banda-top">
+          <a routerLink="/" class="banda-marca">
+            <mat-icon class="banda-logo-icon">hub</mat-icon>
+            <span>Marca Blanca</span>
+          </a>
+          <a routerLink="/login" class="banda-link">Ya tengo cuenta</a>
+        </div>
+
+        <div class="banda-mensaje">
+          <h1>{{ tituloBanda() }}</h1>
+          <p>{{ subtituloBanda() }}</p>
+        </div>
+
+        <svg class="banda-ilustracion" viewBox="0 0 200 130" aria-hidden="true">
+          <circle cx="158" cy="30" r="18" fill="var(--mb-arena)" />
+          <rect x="24" y="80" width="52" height="34" rx="7" fill="var(--mb-marca-suave)" />
+          <rect x="44" y="52" width="52" height="34" rx="7" fill="var(--mb-sobre-marca-tenue)" />
+          <rect x="86" y="72" width="52" height="34" rx="7" fill="var(--mb-marca-fuerte)" />
+          <rect x="66" y="26" width="34" height="20" rx="6" fill="var(--mb-arena)" />
+        </svg>
 
         @if (paso() <= 5) {
-        <div class="stepper">
-          <div class="stepper-item" [class.stepper-item-activo]="paso() >= 1" [class.stepper-item-hecho]="paso() > 1">
-            <span class="stepper-circulo">
-              @if (paso() > 1) { <mat-icon inline>check</mat-icon> } @else { 1 }
-            </span>
-            <span class="stepper-texto">Empresa</span>
-          </div>
-          <span class="stepper-raya" [class.stepper-raya-activa]="paso() > 1"></span>
-          <div class="stepper-item" [class.stepper-item-activo]="paso() >= 2" [class.stepper-item-hecho]="paso() > 2">
-            <span class="stepper-circulo">
-              @if (paso() > 2) { <mat-icon inline>check</mat-icon> } @else { 2 }
-            </span>
-            <span class="stepper-texto">Módulos</span>
-          </div>
-          <span class="stepper-raya" [class.stepper-raya-activa]="paso() > 2"></span>
-          <div class="stepper-item" [class.stepper-item-activo]="paso() >= 3" [class.stepper-item-hecho]="paso() > 3">
-            <span class="stepper-circulo">
-              @if (paso() > 3) { <mat-icon inline>check</mat-icon> } @else { 3 }
-            </span>
-            <span class="stepper-texto">Login</span>
-          </div>
-          <span class="stepper-raya" [class.stepper-raya-activa]="paso() > 3"></span>
-          <div class="stepper-item" [class.stepper-item-activo]="paso() >= 4" [class.stepper-item-hecho]="paso() > 4">
-            <span class="stepper-circulo">
-              @if (paso() > 4) { <mat-icon inline>check</mat-icon> } @else { 4 }
-            </span>
-            <span class="stepper-texto">Páginas</span>
-          </div>
-          <span class="stepper-raya" [class.stepper-raya-activa]="paso() > 4"></span>
-          <div class="stepper-item" [class.stepper-item-activo]="paso() >= 5">
-            <span class="stepper-circulo">5</span>
-            <span class="stepper-texto">Confirmar</span>
-          </div>
-        </div>
+        <ol class="banda-pasos">
+          @for (p of pasosBanda; track p.numero) {
+            <li [class.actual]="paso() === p.numero" [class.hecho]="paso() > p.numero">
+              <span class="punto">
+                @if (paso() > p.numero) { <mat-icon inline>check</mat-icon> }
+              </span>
+              <span>{{ p.etiqueta }}</span>
+            </li>
+          }
+        </ol>
         }
-      </div>
+      </aside>
 
       <section class="form-panel">
         <div
@@ -773,6 +760,37 @@ interface EstadoWizardGuardado {
   styleUrl: './registro-empresa.component.scss',
 })
 export class RegistroEmpresaComponent {
+
+  protected readonly pasosBanda = [
+    { numero: 1, etiqueta: 'Empresa' },
+    { numero: 2, etiqueta: 'Módulos' },
+    { numero: 3, etiqueta: 'Login' },
+    { numero: 4, etiqueta: 'Páginas' },
+    { numero: 5, etiqueta: 'Confirmar' },
+  ];
+
+  protected readonly tituloBanda = computed(() => {
+    switch (this.paso()) {
+      case 1: return 'Empecemos por tu empresa';
+      case 2: return 'Elige lo que vas a usar';
+      case 3:
+      case 4: return 'Tu plataforma, con tu cara';
+      case 5: return 'Revisemos antes de crear';
+      default: return 'Tu plataforma está lista';
+    }
+  });
+
+  protected readonly subtituloBanda = computed(() => {
+    switch (this.paso()) {
+      case 1: return 'Cinco datos y ya tienes tu espacio.';
+      case 2: return 'Puedes activar más después.';
+      case 3:
+      case 4: return 'Elige cómo se ve. Lo demás lo montamos nosotros.';
+      case 5: return 'Un último vistazo antes de arrancar.';
+      default: return 'Te enviamos las credenciales por correo.';
+    }
+  });
+
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);

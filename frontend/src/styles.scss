@@ -38,3 +38,19 @@ button, input, textarea, select { font: inherit; }
   a, button, .mat-mdc-button-base { transition: color .18s ease, background-color .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
   button:active, .mat-mdc-button-base:active { transform: scale(.98); }
 }
+
+/* Paleta de la plataforma (wizard de registro y superficies propias). */
+:root {
+  --mb-marca: #0B4F55;
+  --mb-marca-fuerte: #0D6068;
+  --mb-marca-suave: #12747E;
+  --mb-arena: #E8C39E;
+  --mb-sobre-marca: #FFFFFF;
+  --mb-sobre-marca-tenue: #9DC5C8;
+  --mb-sobre-marca-inactivo: #3C7A80;
+  --mb-superficie: #FFFFFF;
+  --mb-superficie-alt: #FAFAF9;
+  --mb-borde: #E7E5E4;
+  --mb-texto: #1C1917;
+  --mb-texto-secundario: #78716C;
+}

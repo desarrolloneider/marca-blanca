@@ -65,3 +65,9 @@ databaseChangeLog:
   - include:
       file: changes/0021-ampliar-url-logo-a-texto.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/0022-agregar-clave-cifrada-correo.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/0023-unicidad-remitente-correo.yaml
+      relativeToChangelogFile: true

@@ -128,3 +128,10 @@ aprovisionamiento-infrastructure/.../infrastructure/
   escrita directo en `tbl_empresas_marca`, paso `bienvenida_enviada` del pipeline
   (contraseña temporal + correo), y cambio forzado de contraseña en el primer login
   (`autenticacion` + `usuarios`). ADRs 0005–0007.
+- **2026-09-09** — Casos de uso de administración para la consola de operación:
+  `Empresa.suspender()` / `.reactivar()` / `.actualizarDatos(...)` /
+  `esEditablePorOperador()`, y los puertos de entrada `ListarEmpresas`,
+  `CambiarEstadoDeEmpresa`, `ObtenerDetalleDeEmpresa`, `ActualizarDatosDeEmpresa`,
+  `ActualizarPersonalizacionDeEmpresa`, `GestionarModulosDeEmpresa` + el puerto de
+  lectura `ConsultaDeEmpresas`. Camino de operador separado del wizard (no relaja el
+  candado `BORRADOR`). Ver [ADR 0004 de `consola`](../consola/decisiones/2026-09-09-0004-edicion-operador-separada-del-wizard.md).

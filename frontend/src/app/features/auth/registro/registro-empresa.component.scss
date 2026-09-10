@@ -1,165 +1,157 @@
-
-      :host {
-        --brand-dark: #1e3a5f;
-        --brand-light: #2563eb;
+:host {
+        --brand-dark: var(--mb-marca);
+        --brand-light: var(--mb-marca-suave);
         display: block;
       }
 
       .registro-page {
         min-height: 100vh;
         display: flex;
-        flex-direction: column;
-        background: radial-gradient(circle at 20% -10%, #1e293b 0%, #0f172a 55%, #0b1120 100%);
+        background: var(--mb-superficie);
       }
 
-      .cabecera-fija {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        background: rgba(15, 23, 42, 0.96);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-      }
-
-      .topbar {
+      .wizard-banda {
+        width: 300px;
+        flex-shrink: 0;
+        background: var(--mb-marca);
+        color: var(--mb-sobre-marca);
+        padding: 28px 26px;
         display: flex;
-        align-items: center;
+        flex-direction: column;
         justify-content: space-between;
-        padding: 20px 32px;
+        gap: 22px;
       }
 
-      .topbar-left {
-        display: flex;
-        align-items: center;
-        gap: 28px;
-      }
-
-      .topbar-logo {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 18px;
-        font-weight: 700;
-        color: #f1f5f9;
-        text-decoration: none;
-        cursor: pointer;
-      }
-
-      .topbar-logo:hover {
-        color: #fff;
-      }
-
-      .topbar-logo-icon {
-        color: #60a5fa;
-      }
-
-      .topbar-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: #93c5fd;
-        text-decoration: none;
-      }
-
-      .topbar-link:hover {
-        text-decoration: underline;
-      }
-
-      .stepper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 8px 24px 28px;
-      }
-
-      .stepper-item {
+      .banda-top {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 6px;
+        gap: 16px;
       }
 
-      .stepper-circulo {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
+      .banda-marca {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 0.85rem;
-        font-weight: 700;
-        background: #1e293b;
-        color: #64748b;
-        transition: background 0.2s, color 0.2s;
+        gap: 9px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--mb-sobre-marca);
+        text-decoration: none;
       }
 
-      .stepper-circulo mat-icon {
-        font-size: 16px;
+      .banda-logo-icon {
+        color: var(--mb-arena);
+      }
+
+      .banda-link {
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--mb-sobre-marca-tenue);
+        text-decoration: none;
+      }
+
+      .banda-link:hover {
+        color: var(--mb-sobre-marca);
+      }
+
+      .banda-mensaje h1 {
+        font-size: 26px;
+        font-weight: 600;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+        margin: 0 0 10px;
+      }
+
+      .banda-mensaje p {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--mb-sobre-marca-tenue);
+        margin: 0;
+      }
+
+      .banda-ilustracion {
+        width: 100%;
+        max-width: 200px;
+        height: auto;
+      }
+
+      .banda-pasos {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .banda-pasos li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        color: var(--mb-sobre-marca-inactivo);
+        transition: color 0.2s;
+      }
+
+      .banda-pasos .punto {
         width: 16px;
         height: 16px;
+        border-radius: 50%;
+        border: 1.5px solid currentColor;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
-      .stepper-item-activo .stepper-circulo {
-        background: #3b82f6;
-        color: #fff;
+      .banda-pasos .punto mat-icon {
+        font-size: 12px;
+        width: 12px;
+        height: 12px;
+        color: var(--mb-marca);
       }
 
-      .stepper-item-hecho .stepper-circulo {
-        background: #16a34a;
-        color: #fff;
+      .banda-pasos li.hecho {
+        color: var(--mb-sobre-marca-tenue);
       }
 
-      .stepper-texto {
-        font-size: 0.72rem;
-        font-weight: 600;
-        color: #64748b;
+      .banda-pasos li.hecho .punto {
+        background: var(--mb-arena);
+        border-color: var(--mb-arena);
       }
 
-      .stepper-item-activo .stepper-texto {
-        color: #f1f5f9;
+      .banda-pasos li.actual {
+        color: var(--mb-sobre-marca);
+        font-weight: 500;
       }
 
-      .stepper-raya {
-        flex: 0 0 40px;
-        height: 2px;
-        background: #1e293b;
-        margin-bottom: 20px;
-        transition: background 0.2s;
-      }
-
-      .stepper-raya-activa {
-        background: #16a34a;
+      .banda-pasos li.actual .punto {
+        background: var(--mb-sobre-marca);
+        border-color: var(--mb-sobre-marca);
       }
 
       .form-panel {
+        flex: 1;
+        min-width: 0;
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        padding: 8px 24px 64px;
-        flex: 1;
+        padding: 44px 40px 64px;
+        overflow-y: auto;
       }
 
       .form-wrapper {
         width: 100%;
-        max-width: 560px;
-        padding: 32px 36px 40px;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 24px 60px rgba(0, 0, 0, 0.45);
+        max-width: 620px;
+        background: var(--mb-superficie);
       }
 
       .form-wrapper-exito {
         text-align: center;
-        background: transparent;
-        box-shadow: none;
         max-width: 640px;
       }
 
       .form-wrapper-ancho {
-        max-width: 860px;
+        max-width: 900px;
       }
 
       .back-link {
@@ -167,9 +159,13 @@
         align-items: center;
         gap: 6px;
         font-size: 0.85rem;
-        color: #64748b;
         text-decoration: none;
         margin-bottom: 32px;
+      }
+
+      .back-link,
+      .back-link-btn {
+        color: var(--mb-marca) !important;
       }
 
       .back-link-btn {
@@ -177,7 +173,7 @@
       }
 
       .back-link:hover {
-        color: var(--brand-light);
+        color: var(--mb-marca-fuerte) !important;
       }
 
       .back-link mat-icon {
@@ -323,7 +319,7 @@
 
       .modulo-item-activo {
         border-color: var(--brand-light);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        box-shadow: 0 0 0 3px rgba(11, 79, 85, 0.12);
       }
 
       .modulo-texto {
@@ -363,14 +359,14 @@
       }
 
       .tema-card:hover {
-        border-color: #93c5fd;
+        border-color: var(--mb-marca-suave);
         transform: translateY(-2px);
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
       }
 
       .tema-card-activa {
         border-color: var(--brand-light);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        box-shadow: 0 0 0 3px rgba(11, 79, 85, 0.16);
       }
 
       .tema-card-activa:hover {
@@ -835,14 +831,14 @@
       }
 
       .tema-pagina-item:hover {
-        border-color: #93c5fd;
+        border-color: var(--mb-marca-suave);
         transform: translateY(-2px);
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
       }
 
       .tema-pagina-item-activo {
         border-color: var(--brand-light);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        box-shadow: 0 0 0 3px rgba(11, 79, 85, 0.16);
       }
 
       .tema-pagina-item-activo:hover {
@@ -938,12 +934,12 @@
       .construyendo-texto {
         font-size: 1.15rem;
         font-weight: 600;
-        color: #f1f5f9;
+        color: var(--mb-texto);
         margin: 0 0 20px;
       }
 
       .construyendo-texto strong {
-        color: #93c5fd;
+        color: var(--mb-marca);
       }
 
       .construyendo-barra {
@@ -952,7 +948,7 @@
         height: 4px;
         margin: 0 auto 32px;
         border-radius: 4px;
-        background: #1e293b;
+        background: var(--mb-borde);
         overflow: hidden;
       }
 
@@ -960,7 +956,7 @@
         height: 100%;
         width: 40%;
         border-radius: 4px;
-        background: linear-gradient(90deg, #3b82f6, #93c5fd);
+        background: var(--mb-marca);
         animation: construyendo-avance 1.4s ease-in-out infinite;
       }
 
@@ -977,7 +973,7 @@
         background: #fff;
         border-radius: 16px;
         padding: 28px 32px 32px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 24px 60px rgba(0, 0, 0, 0.45);
+        border: 1px solid var(--mb-borde);
       }
 
       .exito-icono {
@@ -1002,9 +998,9 @@
         margin: 18px 0 8px;
         padding: 14px;
         text-align: left;
-        border: 1px solid #dbe7fb;
+        border: 1px solid var(--mb-borde);
         border-radius: 10px;
-        background: #f5f9ff;
+        background: var(--mb-superficie-alt);
       }
 
       .subdominio-local-label {
@@ -1018,41 +1014,54 @@
       .subdominio-local code {
         display: block;
         overflow: hidden;
-        color: #1558b0;
+        color: var(--mb-marca);
         font-size: 0.88rem;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-
       @media (max-width: 900px) {
-        .topbar {
-          padding: 16px 20px;
+        .registro-page {
+          flex-direction: column;
         }
 
-
-        .topbar-left {
+        .wizard-banda {
+          width: auto;
+          padding: 18px 20px;
           gap: 14px;
         }
 
-        .stepper {
-          gap: 4px;
-          padding: 4px 12px 20px;
+        .banda-top {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
         }
 
-        .stepper-raya {
-          flex-basis: 20px;
+        .banda-mensaje h1 {
+          font-size: 20px;
+          margin-bottom: 6px;
         }
 
-        .stepper-texto {
+        .banda-mensaje p,
+        .banda-ilustracion {
           display: none;
         }
 
-        .form-panel {
-          padding: 4px 16px 48px;
+        .banda-pasos {
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: 8px 16px;
         }
 
-        .form-wrapper {
-          padding: 24px 20px 28px;
+        .banda-pasos li span:last-child {
+          display: none;
+        }
+
+        .banda-pasos li.actual span:last-child {
+          display: inline;
+        }
+
+        .form-panel {
+          padding: 24px 16px 48px;
         }
       }

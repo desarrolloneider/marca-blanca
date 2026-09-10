@@ -87,3 +87,7 @@ mvn -f backend/pom.xml install -DskipTests -pl modulos-empresa/modulos-empresa-d
 ## Historial de cambios
 
 - **2026-09-05** — Luis — Extraído de `empresas` como módulo independiente. Documentación inicial.
+- **2026-09-09** — CRUD del catálogo (antes solo lectura): `Modulo` gana `precio` +
+  `moneda`; nuevo caso de uso `GestionarCatalogoDeModulos` (crear / actualizar /
+  eliminar), con `ModuloYaExisteException` / `ModuloEnUsoException`. Se expone desde la
+  consola de operación (`/api/v1/consola/modulos`). Ver [`consola`](../consola/README.md).
