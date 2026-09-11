@@ -26,7 +26,12 @@ COPY --from=build /app/dist/mi-proyecto-frontend/browser /usr/share/nginx/html
 # imagen (ej. en Render, donde el host interno del backend no se conoce
 # hasta el deploy). Default para docker-compose local.
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+# Defaults para docker-compose local (DNS interna de Docker); en Render se
+# pisan con la URL PUBLICA del backend (ver render.yaml) porque el nombre de
+# red privada entre servicios no resolvia de forma confiable.
+ENV BACKEND_SCHEME=http
 ENV BACKEND_HOST=backend:8080
+ENV DNS_RESOLVER=127.0.0.11
 
 EXPOSE 80
 

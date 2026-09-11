@@ -5,16 +5,36 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # BACKEND_SCHEME/BACKEND_HOST/DNS_RESOLVER se resuelven via envsubst al
+    # arrancar el contenedor (ver Dockerfile) -- defaults para docker-compose
+    # local ("backend:8080" via la DNS interna de Docker, 127.0.0.11).
+    #
+    # El proxy_pass usa una VARIABLE ($backend) en vez de un host fijo a
+    # proposito: con un host fijo, nginx lo resuelve una sola vez al cargar
+    # la config y si falla el arranque completo muere ("host not found in
+    # upstream"). Con variable, la resolucion es por-request via el
+    # "resolver" de abajo -- si el DNS tarda o el otro servicio arranca
+    # despues, nginx igual levanta y sirve el resto del sitio (la API
+    # devuelve 502 hasta que el nombre resuelva, no tumba todo el frontend).
+    resolver ${DNS_RESOLVER} valid=10s;
+
     # El build de produccion usa environment.prod.ts con apiUrl relativo
     # ("/api/v1"), asumiendo que algo enfrente de Angular reenvia esas
     # llamadas al backend. Sin este proxy, cualquier POST/PUT/DELETE a
     # /api/v1/** cae en el try_files de abajo (fallback a index.html) y
     # nginx responde 405, porque su manejador de archivos estaticos solo
-    # admite GET/HEAD. BACKEND_HOST se resuelve via envsubst al arrancar el
-    # contenedor (ver Dockerfile) -- "backend:8080" en docker-compose local,
-    # el host:puerto interno del servicio backend en Render.
+    # admite GET/HEAD.
     location /api/ {
-        proxy_pass http://${BACKEND_HOST}/api/;
+        set $backend ${BACKEND_SCHEME}://${BACKEND_HOST};
+        # Con proxy_pass basado en variable, nginx NO hace el reemplazo de
+        # prefijo de location -- usa literal lo que se escriba aca, sin
+        # importar el path real pedido. $request_uri es el path+query
+        # ORIGINAL tal cual llego (ej. "/api/v1/auth/...?correo=x"), asi que
+        # forwardearlo tal cual es lo unico que preserva la ruta completa.
+        proxy_pass $backend$request_uri;
+        # Necesario para que el handshake TLS funcione cuando el backend es
+        # https (Render enruta por SNI en su borde) -- inofensivo si es http.
+        proxy_ssl_server_name on;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

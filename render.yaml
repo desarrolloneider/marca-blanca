@@ -69,10 +69,16 @@ services:
     dockerContext: ./frontend
     plan: free
     envVars:
-      # host:puerto interno del servicio backend dentro de la red privada de
-      # Render -- lo consume nginx.conf.template via envsubst al arrancar.
+      # El hostname interno de red privada ("marca-blanca-backend:puerto")
+      # no resolvia de forma confiable en el deploy inicial (nginx moria al
+      # arrancar con "host not found in upstream") -- se usa la URL PUBLICA
+      # del backend en su lugar, que siempre resuelve por DNS normal.
+      - key: BACKEND_SCHEME
+        value: https
       - key: BACKEND_HOST
         fromService:
           type: web
           name: marca-blanca-backend
-          property: hostport
+          property: host
+      - key: DNS_RESOLVER
+        value: 1.1.1.1
