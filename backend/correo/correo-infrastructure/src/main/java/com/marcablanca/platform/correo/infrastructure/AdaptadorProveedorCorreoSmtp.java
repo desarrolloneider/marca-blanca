@@ -74,7 +74,7 @@ public class AdaptadorProveedorCorreoSmtp implements ProveedorDeCorreo, ProbarCo
 
         try {
             enviarConexionSmtp(cfg.host(), cfg.puerto(), cfg.usuario(), cfg.seguridad(), cfg.remitenteNombre(),
-                    cfg.remitenteCorreo(), clave, destinatario, "Correo de prueba -- Marca Blanca",
+                    cfg.remitenteCorreo(), clave, destinatario, "Correo de prueba -- LINELCA",
                     "Si estas leyendo esto, la configuracion SMTP \"" + cfg.remitenteNombre()
                             + "\" funciona correctamente.");
             log.info("Correo de PRUEBA enviado a {} usando config id={}", destinatario, id);
@@ -88,7 +88,7 @@ public class AdaptadorProveedorCorreoSmtp implements ProveedorDeCorreo, ProbarCo
         try {
             enviarConexionSmtp(datos.host(), datos.puerto(), datos.usuario(), datos.seguridad(),
                     datos.remitenteNombre(), datos.remitenteCorreo(), datos.clave(), destinatario,
-                    "Correo de prueba -- Marca Blanca",
+                    "Correo de prueba -- LINELCA",
                     "Si estas leyendo esto, la configuracion SMTP \"" + datos.remitenteNombre()
                             + "\" funciona correctamente.");
             log.info("Correo de PRUEBA (ad hoc) enviado a {}", destinatario);

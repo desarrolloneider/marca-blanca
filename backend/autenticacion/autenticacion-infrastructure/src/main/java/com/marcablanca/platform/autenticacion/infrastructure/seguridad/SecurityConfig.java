@@ -7,6 +7,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,6 +36,18 @@ public class SecurityConfig {
                     .csrf(csrf -> csrf.disable())
                     .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    // Sin esto, Spring Security cae a su entry point por defecto
+                    // (Http403ForbiddenEntryPoint) para CUALQUIER request sin
+                    // autenticacion valida -- incluida una con un JWT simplemente
+                    // EXPIRADO, que es el caso normal de uso (el access token dura
+                    // solo 15 min). El interceptor de refresh del frontend
+                    // (refresh-token.interceptor.ts) solo dispara con 401, asi que
+                    // con 403 nunca intentaba renovar y el usuario terminaba
+                    // deslogueado a mitad de una sesion valida. 401 = "no estas
+                    // autenticado" (renovable); 403 sigue siendo el status para
+                    // "si estas autenticado pero esto no te esta permitido" (ver
+                    // JwtAuthFilter, caso de contrasena temporal pendiente).
+                    .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/api/v1/auth/**").permitAll()
                             .requestMatchers("/api/v1/registro/**").permitAll()

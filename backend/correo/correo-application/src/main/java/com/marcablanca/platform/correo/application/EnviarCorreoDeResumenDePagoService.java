@@ -37,7 +37,7 @@ public class EnviarCorreoDeResumenDePagoService implements EnviarCorreoDeResumen
         datos.put("total", comando.total());
 
         String cuerpo = renderizador.renderizar("resumen-pago", datos);
-        proveedorDeCorreo.enviar(new MensajeDeCorreo(destinatario, "Resumen de tu pago - Marca Blanca", cuerpo));
+        proveedorDeCorreo.enviar(new MensajeDeCorreo(destinatario, "Resumen de tu pago - LINELCA", cuerpo));
     }
 
     private String escapar(String texto) {
