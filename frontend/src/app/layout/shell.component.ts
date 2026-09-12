@@ -29,8 +29,7 @@ const CODIGO_A_TEMA_PAGINA: Record<number, TemaPagina> = { 1: 'clasico', 2: 'com
           <a routerLink="/mis-modulos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (mousemove)="onSpotlight($event)"><mat-icon>apps</mat-icon><span>Mis módulos</span></a>
           <a routerLink="/usuarios" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>group</mat-icon><span>Usuarios y accesos</span></a>
           <span class="nav-section">CONFIGURACIÓN</span>
-          <a routerLink="/mi-marca" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>palette</mat-icon><span>Identidad de marca</span></a>
-          <a routerLink="/tema-login" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>dashboard_customize</mat-icon><span>Experiencia de acceso</span></a>
+          <a routerLink="/mi-marca" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>palette</mat-icon><span>Marca y diseño</span></a>
           <a routerLink="/panel/omnicanal/liwa/config" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>settings</mat-icon><span>Configuración de Liwa</span></a>
         </nav>
         <div class="sidebar-help"><mat-icon>support</mat-icon><div><strong>¿Necesitas ayuda?</strong><span>Consulta con soporte</span></div></div>
@@ -154,11 +153,8 @@ export class ShellComponent {
   }
   protected title(): string {
     const path = globalThis.location.pathname;
-    if (path.includes('mi-marca')) {
-      return 'Identidad de marca';
-    }
-    if (path.includes('tema-login')) {
-      return 'Experiencia de acceso';
+    if (path.includes('mi-marca') || path.includes('tema-login')) {
+      return 'Marca y diseño';
     }
     if (path.includes('usuarios')) {
       return 'Usuarios y accesos';

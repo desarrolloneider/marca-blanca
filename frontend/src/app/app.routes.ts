@@ -7,7 +7,6 @@ import { RegistroEmpresaComponent } from './features/auth/registro/registro-empr
 import { ModulosAdminComponent } from './features/admin/pages/modulos-admin/modulos-admin.component';
 import { MisModulosComponent } from './features/empresas/pages/mis-modulos/mis-modulos.component';
 import { MiMarcaComponent } from './features/empresas/pages/mi-marca/mi-marca.component';
-import { SelectorTemaLoginComponent } from './features/empresas/pages/selector-tema-login/selector-tema-login.component';
 import { ListaUsuariosComponent } from './features/usuarios/pages/lista-usuarios/lista-usuarios.component';
 import { Pbx3cxPanelComponent } from './features/3cx/pages/panel/pbx-3cx-panel.component';
 import { ShellComponent } from './layout/shell.component';
@@ -54,7 +53,10 @@ export const routes: Routes = [
     children: [
       { path: 'mis-modulos', component: MisModulosComponent },
       { path: 'mi-marca', component: MiMarcaComponent },
-      { path: 'tema-login', component: SelectorTemaLoginComponent },
+      // "Experiencia de acceso" se fusiono dentro de /mi-marca (ver
+      // mi-marca.component.ts) -- se deja el redirect por si algun enlace
+      // viejo (favoritos, historial) todavia apunta aca.
+      { path: 'tema-login', redirectTo: 'mi-marca' },
       { path: 'usuarios', component: ListaUsuariosComponent },
       // Omnicanal quedo unificado en un solo modulo (omnicanal-liwa):
       // 'panel/omnicanal' y 'panel/omnicanal/liwa' apuntan al mismo panel
