@@ -7,45 +7,100 @@ import { TemaPaginaService, TemaPagina } from '../core/temas/tema-pagina.service
 import { MarcaService } from '../core/identidad-visual/marca.service';
 import { BrandMarkComponent } from '../shared/brand/brand-mark.component';
 
-const CODIGO_A_TEMA_PAGINA: Record<number, TemaPagina> = { 1: 'clasico', 2: 'compacto', 3: 'amplio' };
+const CODIGO_A_TEMA_PAGINA: Record<number, TemaPagina> = { 1: 'clasico', 2: 'compacto', 3: 'encabezado' };
+
+// Los items de navegacion son los mismos en los 2 layouts (sidebar lateral y
+// header arriba) -- se definen una sola vez y cada template los recorre con
+// @for, para no duplicar la lista de rutas en dos lugares que se desincronizarian.
+interface ItemNav {
+  ruta: string;
+  icono: string;
+  etiqueta: string;
+  exacta?: boolean;
+}
+const ITEMS_NAV: ItemNav[] = [
+  { ruta: '/mis-modulos', icono: 'apps', etiqueta: 'Mis módulos', exacta: true },
+  { ruta: '/usuarios', icono: 'group', etiqueta: 'Usuarios y accesos' },
+  { ruta: '/mi-marca', icono: 'palette', etiqueta: 'Marca y diseño' },
+  { ruta: '/panel/omnicanal/liwa/config', icono: 'settings', etiqueta: 'Configuración de Liwa' },
+];
+
 @Component({
   selector: 'app-shell',
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, MatIconModule, MatButtonModule, BrandMarkComponent],
   template: `
-    <div class="app-shell tema-{{ temaPagina.tema() }}">
-      <aside class="sidebar">
-        <div class="sidebar-brand">
-          <div class="brand-mark"><app-brand-mark /></div>
-          <div><strong>LINELCA</strong><span>Business platform</span></div>
-        </div>
-        <div class="workspace-card">
-          <span class="workspace-label">ESPACIO DE TRABAJO</span>
-          <div class="workspace-name"><span class="workspace-dot"></span>{{ empresa() }}</div>
-          <span class="workspace-status"><mat-icon>verified</mat-icon> Cuenta activa</span>
-        </div>
-        <nav class="sidebar-nav" aria-label="Navegación principal">
-          <span class="nav-section">OPERACIÓN</span>
-          <a routerLink="/mis-modulos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (mousemove)="onSpotlight($event)"><mat-icon>apps</mat-icon><span>Mis módulos</span></a>
-          <a routerLink="/usuarios" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>group</mat-icon><span>Usuarios y accesos</span></a>
-          <span class="nav-section">CONFIGURACIÓN</span>
-          <a routerLink="/mi-marca" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>palette</mat-icon><span>Marca y diseño</span></a>
-          <a routerLink="/panel/omnicanal/liwa/config" routerLinkActive="active" (mousemove)="onSpotlight($event)"><mat-icon>settings</mat-icon><span>Configuración de Liwa</span></a>
-        </nav>
-        <div class="sidebar-help"><mat-icon>support</mat-icon><div><strong>¿Necesitas ayuda?</strong><span>Consulta con soporte</span></div></div>
-        <button class="logout-button" type="button" (click)="auth.logout()"><mat-icon>logout</mat-icon><span>Cerrar sesión</span></button>
-      </aside>
-      <div class="main-shell">
-        <header class="topbar">
-          <div class="breadcrumb"><span>Workspace</span><mat-icon>chevron_right</mat-icon><strong>{{ title() }}</strong></div>
+    @if (temaPagina.tema() === 'encabezado') {
+      <!-- Layout "Header arriba": barra de navegacion horizontal, sin sidebar
+           lateral -- pensado para quien prefiere mas ancho para el contenido. -->
+      <div class="app-shell tema-encabezado">
+        <header class="topbar-full">
+          <a routerLink="/mis-modulos" class="brand-mini">
+            <span class="brand-mark"><app-brand-mark /></span>
+            <span><strong>LINELCA</strong><small>{{ empresa() }}</small></span>
+          </a>
+
+          <nav class="topnav" aria-label="Navegación principal">
+            @for (item of itemsNav; track item.ruta) {
+              <a [routerLink]="item.ruta" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exacta }">
+                <mat-icon>{{ item.icono }}</mat-icon>
+                <span>{{ item.etiqueta }}</span>
+              </a>
+            }
+          </nav>
+
           <div class="topbar-actions">
             <button mat-icon-button aria-label="Notificaciones"><mat-icon>notifications_none</mat-icon><span class="notification-dot"></span></button>
-            <div class="profile"><div class="avatar">{{ initials() }}</div><div><strong>{{ userName() }}</strong><span>Administrador</span></div><mat-icon>expand_more</mat-icon></div>
+            <div class="profile"><div class="avatar">{{ initials() }}</div><div><strong>{{ userName() }}</strong><span>Administrador</span></div></div>
+            <button mat-icon-button aria-label="Cerrar sesión" (click)="auth.logout()"><mat-icon>logout</mat-icon></button>
           </div>
         </header>
+
+        <div class="breadcrumb-bar"><span>Workspace</span><mat-icon>chevron_right</mat-icon><strong>{{ title() }}</strong></div>
         <main class="page-content"><router-outlet /></main>
       </div>
-    </div>
+    } @else {
+      <!-- Layout clasico/compacto: sidebar lateral (el original). -->
+      <div class="app-shell tema-{{ temaPagina.tema() }}">
+        <aside class="sidebar">
+          <div class="sidebar-brand">
+            <div class="brand-mark"><app-brand-mark /></div>
+            <div><strong>LINELCA</strong><span>Business platform</span></div>
+          </div>
+          <div class="workspace-card">
+            <span class="workspace-label">ESPACIO DE TRABAJO</span>
+            <div class="workspace-name"><span class="workspace-dot"></span>{{ empresa() }}</div>
+            <span class="workspace-status"><mat-icon>verified</mat-icon> Cuenta activa</span>
+          </div>
+          <nav class="sidebar-nav" aria-label="Navegación principal">
+            <span class="nav-section">OPERACIÓN</span>
+            @for (item of itemsNav.slice(0, 2); track item.ruta) {
+              <a [routerLink]="item.ruta" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exacta }" (mousemove)="onSpotlight($event)">
+                <mat-icon>{{ item.icono }}</mat-icon><span>{{ item.etiqueta }}</span>
+              </a>
+            }
+            <span class="nav-section">CONFIGURACIÓN</span>
+            @for (item of itemsNav.slice(2); track item.ruta) {
+              <a [routerLink]="item.ruta" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exacta }" (mousemove)="onSpotlight($event)">
+                <mat-icon>{{ item.icono }}</mat-icon><span>{{ item.etiqueta }}</span>
+              </a>
+            }
+          </nav>
+          <div class="sidebar-help"><mat-icon>support</mat-icon><div><strong>¿Necesitas ayuda?</strong><span>Consulta con soporte</span></div></div>
+          <button class="logout-button" type="button" (click)="auth.logout()"><mat-icon>logout</mat-icon><span>Cerrar sesión</span></button>
+        </aside>
+        <div class="main-shell">
+          <header class="topbar">
+            <div class="breadcrumb"><span>Workspace</span><mat-icon>chevron_right</mat-icon><strong>{{ title() }}</strong></div>
+            <div class="topbar-actions">
+              <button mat-icon-button aria-label="Notificaciones"><mat-icon>notifications_none</mat-icon><span class="notification-dot"></span></button>
+              <div class="profile"><div class="avatar">{{ initials() }}</div><div><strong>{{ userName() }}</strong><span>Administrador</span></div><mat-icon>expand_more</mat-icon></div>
+            </div>
+          </header>
+          <main class="page-content"><router-outlet /></main>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; min-height: 100vh; }
@@ -84,17 +139,55 @@ const CODIGO_A_TEMA_PAGINA: Record<number, TemaPagina> = { 1: 'clasico', 2: 'com
     .app-shell.tema-compacto .page-content { padding: 18px 22px 30px; }
     .app-shell.tema-compacto .topbar { height: 58px; padding: 0 22px; }
     .app-shell.tema-compacto .sidebar-nav a { padding: 8px 10px; font-size: 12.5px; }
-    .app-shell.tema-amplio .sidebar { width: 288px; flex-basis: 288px; padding: 32px 22px 24px; }
-    .app-shell.tema-amplio .page-content { padding: 44px 52px 60px; max-width: 1650px; }
-    .app-shell.tema-amplio .topbar { height: 84px; padding: 0 44px; }
-    .app-shell.tema-amplio .sidebar-nav a { padding: 14px 14px; font-size: 13.5px; }
-    .app-shell.tema-amplio .workspace-card { padding: 18px; }
     @media (max-width: 800px) { .sidebar { width:70px; flex-basis:70px; padding:20px 10px; }.sidebar-brand { padding:0 8px 28px; }.sidebar-brand > div:last-child,.workspace-card,.sidebar-nav span,.sidebar-help div,.logout-button span { display:none; }.sidebar-nav a { justify-content:center; padding:12px; }.sidebar-help { justify-content:center; padding:18px 0; }.logout-button { justify-content:center; padding-left:0; padding-right:0; }.topbar { padding:0 18px; }.breadcrumb span,.breadcrumb mat-icon { display:none; }.profile > div:last-of-type,.profile > mat-icon { display:none; }.page-content { padding:22px 16px 36px; } }
+
+    /* ---------- Layout "Header arriba" (tema-encabezado) ---------- */
+    .app-shell.tema-encabezado { flex-direction: column; }
+    .topbar-full {
+      height: 68px; box-sizing: border-box; background: #101a2d; color: #d7deeb;
+      display: flex; align-items: center; gap: 32px; padding: 0 28px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .brand-mini { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; flex-shrink: 0; }
+    .brand-mini .brand-mark { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: linear-gradient(135deg,#2f7cf6,#79b4ff); }
+    .brand-mini .brand-mark app-brand-mark { font-size: 18px; }
+    .brand-mini strong, .brand-mini small { display: block; }
+    .brand-mini strong { font-size: 14px; }
+    .brand-mini small { font-size: 10px; color: #8492aa; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .topnav { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; }
+    .topnav a {
+      display: flex; align-items: center; gap: 8px; color: #9daac0; text-decoration: none;
+      border-radius: 9px; padding: 9px 14px; font-size: 13px; white-space: nowrap;
+      transition: background .18s ease, color .18s ease;
+    }
+    .topnav a mat-icon { width: 18px; height: 18px; font-size: 18px; }
+    .topnav a:hover { background: #1b2b47; color: #fff; }
+    .topnav a.active { background: #2468d9; color: #fff; }
+    .topbar-full .topbar-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .topbar-full .topbar-actions button { color: #9daac0; }
+    .topbar-full .profile { display: flex; align-items: center; gap: 9px; }
+    .topbar-full .profile strong, .topbar-full .profile span { display: block; color: #fff; }
+    .topbar-full .profile strong { font-size: 12px; }
+    .topbar-full .profile span { font-size: 10px; color: #8492aa; margin-top: 1px; }
+    .breadcrumb-bar {
+      display: flex; align-items: center; gap: 7px; color: #8b97aa; font-size: 13px;
+      padding: 18px 34px 0; max-width: 1500px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    }
+    .breadcrumb-bar mat-icon { width: 17px; height: 17px; font-size: 17px; }
+    .breadcrumb-bar strong { color: #26334a; font-weight: 600; }
+    .tema-encabezado .page-content { padding: 14px 34px 48px; max-width: 1500px; margin: 0 auto; box-sizing: border-box; }
+    @media (max-width: 900px) {
+      .topbar-full { flex-wrap: wrap; height: auto; padding: 12px 18px; gap: 12px; }
+      .topnav { order: 3; width: 100%; }
+      .breadcrumb-bar { padding: 14px 18px 0; }
+      .tema-encabezado .page-content { padding: 14px 18px 36px; }
+    }
   `],
 })
 export class ShellComponent {
   protected readonly auth = inject(AuthService);
   protected readonly temaPagina = inject(TemaPaginaService);
+  protected readonly itemsNav = ITEMS_NAV;
   private readonly marcaService = inject(MarcaService);
 
   constructor() {

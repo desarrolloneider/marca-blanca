@@ -865,14 +865,16 @@
         box-shadow: 0 3px 10px rgba(15, 23, 42, .10);
       }
 
-      /* clasico = sidebar + contenido lado a lado (row, el default de arriba).
-         compacto/amplio = topbar arriba y contenido debajo -- sin esto, el
-         topbar y el contenido quedaban uno al lado del otro en vez de
-         apilados. */
-      .pagina-window-compacto,
-      .pagina-window-amplio {
+      /* clasico/compacto = sidebar + contenido lado a lado (row, el default
+         de arriba) -- compacto solo usa una version mas chica del mismo
+         sidebar (ver pagina-window-compacto abajo). encabezado = topbar
+         arriba y contenido debajo -- sin esto, el topbar y el contenido
+         quedaban uno al lado del otro en vez de apilados. */
+      .pagina-window-encabezado {
         flex-direction: column;
       }
+
+      .pagina-window-compacto .pagina-sidebar-item { width: 45%; }
 
       .pagina-sidebar { width: 24%; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 8px; }
       .pagina-sidebar-logo { width: 14px; height: 14px; object-fit: contain; border-radius: 3px; background: rgba(255,255,255,.85); margin-bottom: 2px; }

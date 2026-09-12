@@ -21,7 +21,7 @@ export interface RegistrarEmpresaResponse {
 // (reemplazo total: se manda todo lo acumulado en cada llamada). tipoLogin y
 // tipoPantallaPrincipal son codigos 1..3: coinciden con el orden de las
 // opciones mostradas en el wizard (lateral/clasico=1, centrado/compacto=2,
-// fondo/amplio=3).
+// fondo/encabezado=3).
 export interface PersonalizacionRequest {
   colorPrimario: string | null;
   colorSecundario: string | null;

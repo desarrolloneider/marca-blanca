@@ -86,9 +86,9 @@ interface OpcionTemaPagina {
 }
 
 const OPCIONES_TEMA_PAGINA: OpcionTemaPagina[] = [
-  { codigo: 'clasico', nombre: 'Clásico', descripcion: 'El espaciado y densidad actuales de la plataforma.', icono: 'view_agenda' },
-  { codigo: 'compacto', nombre: 'Compacto', descripcion: 'Menos espacio entre elementos, más contenido visible.', icono: 'view_headline' },
-  { codigo: 'amplio', nombre: 'Amplio', descripcion: 'Más aire entre secciones, tipografía más grande.', icono: 'view_stream' },
+  { codigo: 'clasico', nombre: 'Clásico', descripcion: 'Barra lateral a la izquierda con la navegación.', icono: 'view_agenda' },
+  { codigo: 'compacto', nombre: 'Compacto', descripcion: 'La misma barra lateral, con menos espacio entre elementos.', icono: 'view_headline' },
+  { codigo: 'encabezado', nombre: 'Header arriba', descripcion: 'Sin barra lateral: la navegación va arriba, en horizontal.', icono: 'view_stream' },
 ];
 
 interface PaletaPredefinida {
@@ -605,10 +605,13 @@ interface EstadoWizardGuardado {
                           }
                           @case ('compacto') {
                             <div class="pagina-window pagina-window-compacto">
-                              <div class="pagina-topbar" [style.background]="colorPrimario()">
+                              <div class="pagina-sidebar" [style.background]="'linear-gradient(180deg, ' + colorSecundario() + ', ' + colorPrimario() + ')'">
                                 @if (logoDataUrl()) {
-                                  <img [src]="logoDataUrl()" alt="" class="pagina-topbar-logo" />
+                                  <img [src]="logoDataUrl()" alt="" class="pagina-sidebar-logo" />
                                 }
+                                <i class="pagina-sidebar-item activo"></i>
+                                <i class="pagina-sidebar-item"></i>
+                                <i class="pagina-sidebar-item"></i>
                               </div>
                               <div class="pagina-content">
                                 <span class="pagina-linea ancha"></span>
@@ -616,8 +619,8 @@ interface EstadoWizardGuardado {
                               </div>
                             </div>
                           }
-                          @case ('amplio') {
-                            <div class="pagina-window pagina-window-amplio">
+                          @case ('encabezado') {
+                            <div class="pagina-window pagina-window-encabezado">
                               <div class="pagina-topbar" [style.background]="colorSecundario()">
                                 @if (logoDataUrl()) {
                                   <img [src]="logoDataUrl()" alt="" class="pagina-topbar-logo" />

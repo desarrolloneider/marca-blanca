@@ -60,9 +60,9 @@ interface OpcionPagina {
 }
 
 const OPCIONES_PAGINA: OpcionPagina[] = [
-  { codigo: 'clasico', numero: 1, nombre: 'Clásico', descripcion: 'El espaciado y densidad actuales de la plataforma.' },
-  { codigo: 'compacto', numero: 2, nombre: 'Compacto', descripcion: 'Menos espacio entre elementos, más contenido visible.' },
-  { codigo: 'amplio', numero: 3, nombre: 'Amplio', descripcion: 'Más aire entre secciones, tipografía más grande.' },
+  { codigo: 'clasico', numero: 1, nombre: 'Clásico', descripcion: 'Barra lateral a la izquierda con la navegación. El diseño actual.' },
+  { codigo: 'compacto', numero: 2, nombre: 'Compacto', descripcion: 'La misma barra lateral, con menos espacio entre elementos.' },
+  { codigo: 'encabezado', numero: 3, nombre: 'Header arriba', descripcion: 'Sin barra lateral: la navegación va en una franja horizontal arriba, con más ancho para el contenido.' },
 ];
 
 /**
@@ -285,36 +285,61 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
           </a>
         </section>
 
-        <!-- DENSIDAD DE PÁGINAS -->
+        <!-- DISEÑO DE LAS PÁGINAS -->
         <section class="tarjeta">
-          <h2><span class="h2-icono verde"><mat-icon>view_agenda</mat-icon></span>Densidad de las páginas</h2>
-          <p class="hint">Cuánto espacio dejar entre elementos en el resto de la plataforma (menú, listados, etc.).</p>
+          <h2><span class="h2-icono verde"><mat-icon>view_agenda</mat-icon></span>Diseño de las páginas</h2>
+          <p class="hint">Cómo se organiza la navegación y el espacio en el resto de la plataforma (menú, listados, etc.).</p>
 
           <div class="temas-grid" [style.--acento]="previewPrimario()" [style.--acento-oscuro]="previewSecundario()">
             @for (opcion of opcionesPagina; track opcion.codigo) {
               <div class="tema-card" [class.tema-card-activa]="codigoPaginaActivo() === opcion.codigo">
                 <div class="preview preview-pagina" [class]="'preview-pagina-' + opcion.codigo">
-                  <div class="preview-pagina-sidebar">
-                    <span class="preview-logo chico">
-                      @if (form.value.urlLogo) {
-                        <img [src]="form.value.urlLogo" alt="" />
-                      } @else {
-                        <mat-icon>hub</mat-icon>
+                  @if (opcion.codigo === 'encabezado') {
+                    <div class="preview-pagina-header">
+                      <span class="preview-logo chico">
+                        @if (form.value.urlLogo) {
+                          <img [src]="form.value.urlLogo" alt="" />
+                        } @else {
+                          <mat-icon>hub</mat-icon>
+                        }
+                      </span>
+                      <div class="preview-nav-item activo horizontal"></div>
+                      <div class="preview-nav-item horizontal"></div>
+                      <div class="preview-nav-item horizontal"></div>
+                    </div>
+                    <div class="preview-pagina-contenido ancho">
+                      <div class="preview-pagina-barra grande"></div>
+                      @for (fila of [1, 2, 3]; track fila) {
+                        <div class="preview-pagina-fila">
+                          <div class="preview-pagina-card"></div>
+                          <div class="preview-pagina-card"></div>
+                          <div class="preview-pagina-card"></div>
+                        </div>
                       }
-                    </span>
-                    <div class="preview-nav-item activo"></div>
-                    <div class="preview-nav-item"></div>
-                    <div class="preview-nav-item"></div>
-                  </div>
-                  <div class="preview-pagina-contenido">
-                    <div class="preview-pagina-barra grande"></div>
-                    @for (fila of [1, 2, 3]; track fila) {
-                      <div class="preview-pagina-fila">
-                        <div class="preview-pagina-card"></div>
-                        <div class="preview-pagina-card"></div>
-                      </div>
-                    }
-                  </div>
+                    </div>
+                  } @else {
+                    <div class="preview-pagina-sidebar">
+                      <span class="preview-logo chico">
+                        @if (form.value.urlLogo) {
+                          <img [src]="form.value.urlLogo" alt="" />
+                        } @else {
+                          <mat-icon>hub</mat-icon>
+                        }
+                      </span>
+                      <div class="preview-nav-item activo"></div>
+                      <div class="preview-nav-item"></div>
+                      <div class="preview-nav-item"></div>
+                    </div>
+                    <div class="preview-pagina-contenido">
+                      <div class="preview-pagina-barra grande"></div>
+                      @for (fila of [1, 2, 3]; track fila) {
+                        <div class="preview-pagina-fila">
+                          <div class="preview-pagina-card"></div>
+                          <div class="preview-pagina-card"></div>
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
 
                 <h3>{{ opcion.nombre }}</h3>
@@ -327,7 +352,7 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
                   </button>
                 } @else {
                   <button mat-stroked-button [disabled]="guardandoPagina()" (click)="elegirPagina(opcion)">
-                    Usar esta densidad
+                    Usar este diseño
                   </button>
                 }
               </div>
@@ -759,14 +784,26 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
       box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
     }
 
-    /* Densidad simulada variando el gap/tamano de las filas -- mismo criterio
-       visual que aplicaria TemaPaginaService si algun dia se conecta de
-       verdad al resto del layout (ver el comentario en ese servicio). */
+    /* Densidad simulada variando el gap/tamano de las filas -- asi se ve la
+       diferencia real que aplica ShellComponent segun el tema elegido. */
     .preview-pagina-compacto .preview-pagina-contenido { gap: 6px; }
     .preview-pagina-compacto .preview-pagina-card { height: 22px; }
-    .preview-pagina-amplio .preview-pagina-contenido { gap: 18px; padding: 20px; }
-    .preview-pagina-amplio .preview-pagina-card { height: 38px; }
-    .preview-pagina-amplio .preview-pagina-barra.grande { height: 15px; }
+
+    /* "Header arriba": layout real distinto (columna, no grid de sidebar) --
+       mismo que implementa ShellComponent cuando tipoPantallaPrincipal=3. */
+    .preview-pagina-encabezado {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+    }
+    .preview-pagina-header {
+      background: var(--acento-oscuro);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+    .preview-nav-item.horizontal { width: 34px; height: 8px; flex-shrink: 0; }
+    .preview-pagina-contenido.ancho .preview-pagina-fila { gap: 8px; }
   `],
 })
 export class MiMarcaComponent implements OnInit {
@@ -900,11 +937,11 @@ export class MiMarcaComponent implements OnInit {
         // backend -- ver ShellComponent).
         this.temaPaginaService.elegir(opcion.codigo);
         this.guardandoPagina.set(false);
-        this.snackBar.open(`Densidad "${opcion.nombre}" activada`, 'Cerrar', { duration: 2500 });
+        this.snackBar.open(`Diseño "${opcion.nombre}" activado`, 'Cerrar', { duration: 2500 });
       },
       error: () => {
         this.guardandoPagina.set(false);
-        this.snackBar.open('No se pudo guardar la densidad. Intenta de nuevo.', 'Cerrar', { duration: 4000 });
+        this.snackBar.open('No se pudo guardar el diseño. Intenta de nuevo.', 'Cerrar', { duration: 4000 });
       },
     });
   }
