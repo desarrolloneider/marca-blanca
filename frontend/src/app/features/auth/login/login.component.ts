@@ -148,11 +148,11 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
     <!-- El logo real de la empresa (si lo configuro) reemplaza el icono
          generico -- ver MarcaPublicaController (backend) y marcaPublica()
          aca abajo. -->
-    <ng-template #logoTpl>
+    <ng-template #logoTpl let-variante="variante">
       @if (marcaPublica()?.urlLogo; as logo) {
         <img [src]="logo" alt="" class="brand-logo-img" />
       } @else {
-        <app-brand-mark class="brand-logo-icon" />
+        <app-brand-mark class="brand-logo-icon" [variante]="variante || 'blanco'" />
       }
     </ng-template>
 
@@ -165,7 +165,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
         >
           <div class="tarjeta-centrada">
             <div class="logo-centrado">
-              <ng-container [ngTemplateOutlet]="logoTpl"></ng-container>
+              <ng-container [ngTemplateOutlet]="logoTpl" [ngTemplateOutletContext]="{ variante: 'negro' }"></ng-container>
             </div>
             <h2>{{ nombreEmpresa() }}</h2>
             <p class="form-subtitle">Iniciar sesión</p>
@@ -223,7 +223,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
               <div class="brand-content">
                 <div class="brand-logo">
                   <ng-container [ngTemplateOutlet]="logoTpl"></ng-container>
-                  <span>Marca Blanca</span>
+                  <span>LINELCA</span>
                 </div>
 
                 <h1>Gestiona tu empresa desde un solo lugar</h1>
@@ -744,7 +744,7 @@ export class LoginComponent {
   protected readonly temaVisual = computed(() => temaVisualDesdeCodigo(this.marcaPublica()?.tipoLogin));
   protected readonly colorPrimario = computed(() => this.marcaPublica()?.colorPrimario || undefined);
   protected readonly colorSecundario = computed(() => this.marcaPublica()?.colorSecundario || undefined);
-  protected readonly nombreEmpresa = computed(() => this.marcaPublica()?.nombreEmpresa || 'Marca Blanca');
+  protected readonly nombreEmpresa = computed(() => this.marcaPublica()?.nombreEmpresa || 'LINELCA');
 
   protected readonly form = this.fb.nonNullable.group({
     correo: ['', [Validators.required, Validators.email]],
