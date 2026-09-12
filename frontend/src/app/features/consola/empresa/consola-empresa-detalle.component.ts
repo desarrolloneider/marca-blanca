@@ -67,147 +67,167 @@ const TIPOS_PANTALLA = [
           </div>
         </header>
 
-        <!-- DATOS -->
-        <section class="tarjeta">
-          <h2><span class="h2-icono azul"><mat-icon>badge</mat-icon></span>Datos de contacto</h2>
-          <p class="hint">
-            El correo de acá es el de contacto (facturación y avisos de la plataforma). No cambia el
-            correo con el que inician sesión los usuarios de la empresa.
-          </p>
-          <form [formGroup]="datosForm" (ngSubmit)="guardarDatos()">
-            <div class="grid">
-              <mat-form-field appearance="outline">
-                <mat-label>Nombre legal</mat-label>
-                <input matInput formControlName="nombreLegal" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Representante legal</mat-label>
-                <input matInput formControlName="representanteLegal" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Correo de contacto</mat-label>
-                <input matInput type="email" formControlName="correo" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Teléfono</mat-label>
-                <input matInput formControlName="telefono" />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="ancho">
-                <mat-label>Sitio web</mat-label>
-                <input matInput formControlName="sitioWeb" />
-              </mat-form-field>
-            </div>
-            <button mat-flat-button color="primary" type="submit" [disabled]="datosForm.invalid || guardando() === 'datos'">
-              Guardar datos
-            </button>
-          </form>
-        </section>
-
-        <!-- MARCA -->
-        <section class="tarjeta">
-          <h2><span class="h2-icono violeta"><mat-icon>palette</mat-icon></span>Marca</h2>
-          <form [formGroup]="marcaForm" (ngSubmit)="guardarMarca()">
-            <div class="grid">
-              <label class="color">
-                Color primario
-                <input type="color" formControlName="colorPrimario" />
-              </label>
-              <label class="color">
-                Color secundario
-                <input type="color" formControlName="colorSecundario" />
-              </label>
-              <mat-form-field appearance="outline" class="ancho">
-                <mat-label>URL del logo</mat-label>
-                <input matInput formControlName="urlLogo" placeholder="https://…" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Tipo de login</mat-label>
-                <mat-select formControlName="tipoLogin">
-                  @for (t of tiposLogin; track t.valor) {
-                    <mat-option [value]="t.valor">{{ t.etiqueta }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Pantalla principal</mat-label>
-                <mat-select formControlName="tipoPantallaPrincipal">
-                  @for (t of tiposPantalla; track t.valor) {
-                    <mat-option [value]="t.valor">{{ t.etiqueta }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-            </div>
-            <button mat-flat-button color="primary" type="submit" [disabled]="guardando() === 'marca'">
-              Guardar marca
-            </button>
-          </form>
-        </section>
-
-        <!-- MÓDULOS -->
-        <section class="tarjeta">
-          <h2><span class="h2-icono verde"><mat-icon>extension</mat-icon></span>Módulos</h2>
-          @if (modulos().length === 0) {
-            <p class="vacio">No hay módulos en el catálogo.</p>
-          }
-          <ul class="modulos">
-            @for (m of modulos(); track m.codigo) {
-              <li [class.activo]="m.activo">
-                <div class="modulo-icono" [class.activo]="m.activo"><mat-icon>{{ m.activo ? 'check' : 'power_settings_new' }}</mat-icon></div>
-                <div>
-                  <span class="nombre">{{ m.nombre }}</span>
-                  <span class="codigo">{{ m.codigo }}</span>
+        <div class="columnas">
+          <div class="columna">
+            <!-- DATOS -->
+            <section class="tarjeta">
+              <h2><span class="h2-icono azul"><mat-icon>badge</mat-icon></span>Datos de contacto</h2>
+              <p class="hint">
+                El correo de acá es el de contacto (facturación y avisos de la plataforma). No cambia el
+                correo con el que inician sesión los usuarios de la empresa.
+              </p>
+              <form [formGroup]="datosForm" (ngSubmit)="guardarDatos()">
+                <div class="grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre legal</mat-label>
+                    <input matInput formControlName="nombreLegal" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Representante legal</mat-label>
+                    <input matInput formControlName="representanteLegal" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Correo de contacto</mat-label>
+                    <input matInput type="email" formControlName="correo" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput formControlName="telefono" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="ancho">
+                    <mat-label>Sitio web</mat-label>
+                    <input matInput formControlName="sitioWeb" />
+                  </mat-form-field>
                 </div>
-                <mat-slide-toggle
-                  [checked]="m.activo"
-                  [disabled]="moduloOcupado() === m.codigo"
-                  (change)="alternarModulo(m, $event.checked)"
-                />
-              </li>
-            }
-          </ul>
-        </section>
+                <button mat-flat-button color="primary" type="submit" [disabled]="datosForm.invalid || guardando() === 'datos'">
+                  Guardar datos
+                </button>
+              </form>
+            </section>
 
-        <!-- OMNICANAL (LIWA) -- solo el super admin ve/toca esto. El tenant
-             ni siquiera tiene el toggle de IA en su propia pantalla de
-             configuracion (se le oculto: viene con default de plataforma). -->
-        <section class="tarjeta tarjeta-sensible">
-          <h2><span class="h2-icono ambar"><mat-icon>admin_panel_settings</mat-icon></span>Omnicanal (Liwa)</h2>
-          @if (cargandoOmnicanal()) {
-            <p class="hint">Cargando…</p>
-          } @else if (omnicanal(); as o) {
-            <p class="hint">
-              El analisis con IA y el secreto del webhook son de control exclusivo del super admin -- la
-              empresa no puede cambiarlos desde su propia pantalla de configuracion.
-            </p>
-            <div class="fila-ia">
-              <mat-slide-toggle [checked]="o.iaHabilitada" [disabled]="guardandoIa()" (change)="alternarIa($event.checked)">
-                Analizar conversaciones con IA
-              </mat-slide-toggle>
-            </div>
-            <div class="grid">
-              <mat-form-field appearance="outline" class="ancho">
-                <mat-label>URL del webhook</mat-label>
-                <input matInput [value]="o.webhookUrl" readonly />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="ancho">
-                <mat-label>Secreto del webhook</mat-label>
-                <input matInput [value]="o.webhookSecret ?? '••••••••  (rota para verlo)'" readonly />
-              </mat-form-field>
-            </div>
-            <button mat-stroked-button type="button" [disabled]="rotandoSecreto()" (click)="rotarSecreto()">
-              <mat-icon>autorenew</mat-icon>
-              Rotar secreto del webhook
-            </button>
-            <p class="hint aviso">Rotar el secreto invalida el anterior de inmediato -- hay que actualizarlo en Liwa.</p>
-          }
-        </section>
+            <!-- MÓDULOS -->
+            <section class="tarjeta">
+              <h2><span class="h2-icono verde"><mat-icon>extension</mat-icon></span>Módulos</h2>
+              @if (modulos().length === 0) {
+                <p class="vacio">No hay módulos en el catálogo.</p>
+              }
+              <ul class="modulos">
+                @for (m of modulos(); track m.codigo) {
+                  <li [class.activo]="m.activo">
+                    <div class="modulo-icono" [class.activo]="m.activo"><mat-icon>{{ m.activo ? 'check' : 'power_settings_new' }}</mat-icon></div>
+                    <div>
+                      <span class="nombre">{{ m.nombre }}</span>
+                      <span class="codigo">{{ m.codigo }}</span>
+                    </div>
+                    <mat-slide-toggle
+                      [checked]="m.activo"
+                      [disabled]="moduloOcupado() === m.codigo"
+                      (change)="alternarModulo(m, $event.checked)"
+                    />
+                  </li>
+                }
+              </ul>
+            </section>
+          </div>
+
+          <div class="columna">
+            <!-- MARCA -->
+            <section class="tarjeta">
+              <h2><span class="h2-icono violeta"><mat-icon>palette</mat-icon></span>Marca</h2>
+              <form [formGroup]="marcaForm" (ngSubmit)="guardarMarca()">
+                <div class="grid">
+                  <label class="color">
+                    Color primario
+                    <input type="color" formControlName="colorPrimario" />
+                  </label>
+                  <label class="color">
+                    Color secundario
+                    <input type="color" formControlName="colorSecundario" />
+                  </label>
+                  <mat-form-field appearance="outline" class="ancho">
+                    <mat-label>URL del logo</mat-label>
+                    <input matInput formControlName="urlLogo" placeholder="https://…" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo de login</mat-label>
+                    <mat-select formControlName="tipoLogin">
+                      @for (t of tiposLogin; track t.valor) {
+                        <mat-option [value]="t.valor">{{ t.etiqueta }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Pantalla principal</mat-label>
+                    <mat-select formControlName="tipoPantallaPrincipal">
+                      @for (t of tiposPantalla; track t.valor) {
+                        <mat-option [value]="t.valor">{{ t.etiqueta }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <button mat-flat-button color="primary" type="submit" [disabled]="guardando() === 'marca'">
+                  Guardar marca
+                </button>
+              </form>
+            </section>
+
+            <!-- OMNICANAL (LIWA) -- solo el super admin ve/toca esto. El tenant
+                 ni siquiera tiene el toggle de IA en su propia pantalla de
+                 configuracion (se le oculto: viene con default de plataforma). -->
+            <section class="tarjeta tarjeta-sensible">
+              <h2><span class="h2-icono ambar"><mat-icon>admin_panel_settings</mat-icon></span>Omnicanal (Liwa)</h2>
+              @if (cargandoOmnicanal()) {
+                <p class="hint">Cargando…</p>
+              } @else if (omnicanal(); as o) {
+                <p class="hint">
+                  El analisis con IA y el secreto del webhook son de control exclusivo del super admin -- la
+                  empresa no puede cambiarlos desde su propia pantalla de configuracion.
+                </p>
+                <div class="fila-ia">
+                  <mat-slide-toggle [checked]="o.iaHabilitada" [disabled]="guardandoIa()" (change)="alternarIa($event.checked)">
+                    Analizar conversaciones con IA
+                  </mat-slide-toggle>
+                </div>
+                <div class="grid">
+                  <mat-form-field appearance="outline" class="ancho">
+                    <mat-label>URL del webhook</mat-label>
+                    <input matInput [value]="o.webhookUrl" readonly />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="ancho">
+                    <mat-label>Secreto del webhook</mat-label>
+                    <input matInput [value]="o.webhookSecret ?? '••••••••  (rota para verlo)'" readonly />
+                  </mat-form-field>
+                </div>
+                <button mat-stroked-button type="button" [disabled]="rotandoSecreto()" (click)="rotarSecreto()">
+                  <mat-icon>autorenew</mat-icon>
+                  Rotar secreto del webhook
+                </button>
+                <p class="hint aviso">Rotar el secreto invalida el anterior de inmediato -- hay que actualizarlo en Liwa.</p>
+              }
+            </section>
+          </div>
+        </div>
       }
     </div>
   `,
   styles: [
     `
       :host { display: block; min-height: 100vh; background: #f1f5f9; }
-      .marco { max-width: 860px; margin: 0 auto; padding: 24px; }
+      .marco { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+      .columnas {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+        margin-top: 16px;
+      }
+      .columna {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .columna .tarjeta { margin-top: 0; }
 
       .volver {
         display: inline-flex;
@@ -343,6 +363,10 @@ const TIPOS_PANTALLA = [
         margin: 12px 0;
       }
       .error mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+      @media (max-width: 900px) {
+        .columnas { grid-template-columns: 1fr; }
+      }
 
       @media (max-width: 620px) {
         .grid { grid-template-columns: 1fr; }
