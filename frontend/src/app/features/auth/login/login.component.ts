@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { MarcaService } from '../../../core/identidad-visual/marca.service';
 import { MarcaDeEmpresa } from '../../../core/identidad-visual/models';
 import { BrandMarkComponent } from '../../../shared/brand/brand-mark.component';
+import { ordenarClaroOscuro } from '../../../shared/brand/color-utils';
 
 type TemaVisual = 'lateral' | 'centrado' | 'fondo';
 
@@ -72,6 +73,11 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
           <input matInput type="email" formControlName="correo" autocomplete="email" />
           <mat-icon matPrefix>mail_outline</mat-icon>
         </mat-form-field>
+        @if (form.controls.correo.invalid && form.controls.correo.touched) {
+          <p class="campo-error">
+            {{ form.controls.correo.hasError('required') ? 'El correo es obligatorio.' : 'Ingresa un correo válido.' }}
+          </p>
+        }
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Contraseña</mat-label>
@@ -92,6 +98,9 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
             <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
         </mat-form-field>
+        @if (form.controls.contrasena.invalid && form.controls.contrasena.touched) {
+          <p class="campo-error">La contraseña es obligatoria.</p>
+        }
 
         <label class="recordarme">
           <input type="checkbox" formControlName="recordarme" />
@@ -146,8 +155,8 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
       @case ('centrado') {
         <div
           class="login-page tema-centrado"
-          [style.--brand-light]="colorPrimario()"
-          [style.--brand-dark]="colorSecundario()"
+          [style.--brand-light]="colorAcento()"
+          [style.--brand-dark]="colorFondo()"
         >
           <div class="tarjeta-centrada entrada-animada">
             <div class="logo-centrado">
@@ -162,8 +171,8 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
       @case ('fondo') {
         <div
           class="login-page tema-fondo"
-          [style.--brand-light]="colorPrimario()"
-          [style.--brand-dark]="colorSecundario()"
+          [style.--brand-light]="colorAcento()"
+          [style.--brand-dark]="colorFondo()"
         >
           <div class="fondo-overlay"></div>
           <div class="tarjeta-flotante entrada-animada">
@@ -188,8 +197,8 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
       @default {
         <div
           class="login-page tema-lateral"
-          [style.--brand-light]="colorPrimario()"
-          [style.--brand-dark]="colorSecundario()"
+          [style.--brand-light]="colorAcento()"
+          [style.--brand-dark]="colorFondo()"
         >
           <section class="brand-panel">
             <div class="brand-shape shape-a"></div>
@@ -278,6 +287,12 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
         color: #b3261e;
         font-size: 13px;
         margin: 4px 0 16px;
+      }
+
+      .campo-error {
+        margin: -12px 0 12px;
+        font-size: 0.78rem;
+        color: #dc2626;
       }
 
       .error mat-icon {
@@ -669,6 +684,10 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
         color: #93c5fd;
       }
 
+      .tema-fondo .campo-error {
+        color: #fca5a5;
+      }
+
       .tema-fondo .brand-logo-icon {
         color: #f8fafc;
       }
@@ -748,8 +767,14 @@ export class LoginComponent {
   // todavia, se ve el diseno generico de siempre.
   protected readonly marcaPublica = signal<MarcaDeEmpresa | null>(null);
   protected readonly temaVisual = computed(() => temaVisualDesdeCodigo(this.marcaPublica()?.tipoLogin));
-  protected readonly colorPrimario = computed(() => this.marcaPublica()?.colorPrimario || undefined);
-  protected readonly colorSecundario = computed(() => this.marcaPublica()?.colorSecundario || undefined);
+  private readonly colorPrimario = computed(() => this.marcaPublica()?.colorPrimario || undefined);
+  private readonly colorSecundario = computed(() => this.marcaPublica()?.colorSecundario || undefined);
+  // El mas oscuro de los 2 va de fondo (paneles oscuros de los 3 temas) y el
+  // mas claro queda como acento (boton, degradados) -- ver color-utils.ts:
+  // sin esto, una paleta con el secundario mas claro que el primario (ej.
+  // "Coast") pintaba el panel oscuro con el color equivocado.
+  protected readonly colorFondo = computed(() => ordenarClaroOscuro(this.colorPrimario(), this.colorSecundario()).oscuro);
+  protected readonly colorAcento = computed(() => ordenarClaroOscuro(this.colorPrimario(), this.colorSecundario()).claro);
   protected readonly nombreEmpresa = computed(() => this.marcaPublica()?.nombreEmpresa || 'LINELCA');
   // 1=contener (default), 2=cubrir, 3=estirar -- elegido en "Mi marca".
   protected readonly ajusteLogoCss = computed<'contain' | 'cover' | 'fill'>(() => {
@@ -794,6 +819,7 @@ export class LoginComponent {
   // una pantalla de login generica en el dominio raiz.
   submit(): void {
     if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
     this.loading.set(true);

@@ -13,6 +13,7 @@ import { MarcaDeEmpresa } from '../../../../core/identidad-visual/models';
 import { VistaPreviaMarcaService } from '../../../../core/identidad-visual/vista-previa-marca.service';
 import { TemaPaginaService, TemaPagina } from '../../../../core/temas/tema-pagina.service';
 import { PaletaPredefinida, PALETAS_PREDEFINIDAS } from '../../../../shared/brand/paletas-marca';
+import { ordenarClaroOscuro } from '../../../../shared/brand/color-utils';
 
 const FORMATO_HEX = /^#[0-9A-Fa-f]{6}$/;
 const MAX_LOGO_BYTES = 500 * 1024;
@@ -343,7 +344,7 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
             Elige cómo se ve la pantalla de login de tu empresa. Todos los que inicien sesión lo van a ver así.
           </p>
 
-          <div class="temas-grid" [style.--acento]="previewPrimario()" [style.--acento-oscuro]="previewSecundario()">
+          <div class="temas-grid" [style.--acento]="colorAcento()" [style.--acento-oscuro]="colorFondo()">
             @for (opcion of opcionesLogin; track opcion.codigo) {
               <div class="tema-card" [class.tema-card-activa]="codigoLoginActivo() === opcion.codigo">
                 <div class="preview" [class]="'preview-' + opcion.codigo">
@@ -435,7 +436,7 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
           <h2><span class="h2-icono verde"><mat-icon>view_agenda</mat-icon></span>Diseño de las páginas</h2>
           <p class="hint">Cómo se organiza la navegación y el espacio en el resto de la plataforma (menú, listados, etc.).</p>
 
-          <div class="temas-grid" [style.--acento]="previewPrimario()" [style.--acento-oscuro]="previewSecundario()">
+          <div class="temas-grid" [style.--acento]="colorAcento()" [style.--acento-oscuro]="colorFondo()">
             @for (opcion of opcionesPagina; track opcion.codigo) {
               <div class="tema-card" [class.tema-card-activa]="codigoPaginaActivo() === opcion.codigo">
                 <div class="preview preview-pagina" [class]="'preview-pagina-' + opcion.codigo">
@@ -1442,8 +1443,20 @@ export class MiMarcaComponent implements OnInit, OnDestroy {
     return this.esHexValido(valor) ? (valor as string) : '#1e3a5f';
   }
 
+  // El mas oscuro de los 2 colores va de fondo y el mas claro queda como
+  // acento en las miniaturas de "Diseño de login"/"Diseño de páginas" -- ver
+  // color-utils.ts. Sin esto, las miniaturas no coincidian con lo que
+  // realmente pinta ShellComponent/LoginComponent.
+  protected colorFondo(): string {
+    return ordenarClaroOscuro(this.previewPrimario(), this.previewSecundario()).oscuro ?? '#1e3a5f';
+  }
+
+  protected colorAcento(): string {
+    return ordenarClaroOscuro(this.previewPrimario(), this.previewSecundario()).claro ?? '#2563eb';
+  }
+
   protected gradienteActual(): string {
-    return `linear-gradient(135deg, ${this.previewSecundario()}, ${this.previewPrimario()})`;
+    return `linear-gradient(135deg, ${this.colorFondo()}, ${this.colorAcento()})`;
   }
 
   // "Volver a los colores iniciales": deshace los cambios sin guardar de

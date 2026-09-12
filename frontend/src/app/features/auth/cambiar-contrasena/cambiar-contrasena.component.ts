@@ -16,6 +16,28 @@ function contrasenasCoincidenValidator(control: AbstractControl): ValidationErro
   return nueva && confirmacion && nueva !== confirmacion ? { noCoinciden: true } : null;
 }
 
+// Checklist de requisitos que se muestra en vivo mientras el usuario escribe
+// (en vez de solo rechazar el submit con un mensaje generico) -- cada regla
+// se evalua por separado para poder pintar cual falta todavia.
+interface ReglaContrasena {
+  clave: string;
+  etiqueta: string;
+  cumple: (valor: string) => boolean;
+}
+const REGLAS_CONTRASENA: ReglaContrasena[] = [
+  { clave: 'longitud', etiqueta: 'Al menos 8 caracteres', cumple: (v) => v.length >= 8 },
+  { clave: 'mayuscula', etiqueta: 'Una letra mayúscula', cumple: (v) => /[A-Z]/.test(v) },
+  { clave: 'minuscula', etiqueta: 'Una letra minúscula', cumple: (v) => /[a-z]/.test(v) },
+  { clave: 'numero', etiqueta: 'Un número', cumple: (v) => /[0-9]/.test(v) },
+  { clave: 'especial', etiqueta: 'Un carácter especial (!@#$...)', cumple: (v) => /[^A-Za-z0-9]/.test(v) },
+];
+
+function requisitosContrasenaValidator(control: AbstractControl): ValidationErrors | null {
+  const valor = (control.value as string) ?? '';
+  const faltantes = REGLAS_CONTRASENA.filter((r) => !r.cumple(valor)).map((r) => r.clave);
+  return faltantes.length > 0 ? { requisitos: faltantes } : null;
+}
+
 // Pantalla obligatoria despues del primer login con la contraseña temporal
 // enviada por correo (backend: LoginResponse.debeCambiarContrasena). Mientras
 // no se llame POST /auth/cambiar-contrasena, JwtAuthFilter bloquea cualquier
@@ -54,7 +76,14 @@ function contrasenasCoincidenValidator(control: AbstractControl): ValidationErro
             <input matInput type="password" formControlName="contrasenaNueva" autocomplete="new-password" />
             <mat-icon matPrefix>lock</mat-icon>
           </mat-form-field>
-          <p class="campo-hint">Mínimo 8 caracteres.</p>
+          <ul class="checklist-contrasena">
+            @for (regla of reglasContrasena; track regla.clave) {
+              <li [class.cumplida]="cumpleRegla(regla)">
+                <mat-icon inline>{{ cumpleRegla(regla) ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+                {{ regla.etiqueta }}
+              </li>
+            }
+          </ul>
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Confirmar contraseña nueva</mat-label>
@@ -148,6 +177,33 @@ function contrasenasCoincidenValidator(control: AbstractControl): ValidationErro
         color: #94a3b8;
       }
 
+      .checklist-contrasena {
+        list-style: none;
+        margin: -10px 0 14px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .checklist-contrasena li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        color: #94a3b8;
+      }
+
+      .checklist-contrasena li.cumplida {
+        color: #16a34a;
+      }
+
+      .checklist-contrasena mat-icon {
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+      }
+
       .error-texto {
         margin: 0 0 12px;
         font-size: 0.82rem;
@@ -169,11 +225,16 @@ export class CambiarContrasenaComponent {
 
   protected readonly enviando = signal(false);
   protected readonly errorMensaje = signal<string | null>(null);
+  protected readonly reglasContrasena = REGLAS_CONTRASENA;
+
+  protected cumpleRegla(regla: ReglaContrasena): boolean {
+    return regla.cumple(this.form.controls.contrasenaNueva.value);
+  }
 
   protected readonly form = this.fb.nonNullable.group(
     {
       contrasenaActual: ['', [Validators.required]],
-      contrasenaNueva: ['', [Validators.required, Validators.minLength(8)]],
+      contrasenaNueva: ['', [Validators.required, requisitosContrasenaValidator]],
       confirmacion: ['', [Validators.required]],
     },
     { validators: contrasenasCoincidenValidator },
