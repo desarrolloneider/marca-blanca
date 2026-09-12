@@ -28,6 +28,9 @@ import { ConsolaAuthService } from '../../../core/consola/consola-auth.service';
   ],
   template: `
     <div class="pagina">
+      <div class="glow g1"></div>
+      <div class="glow g2"></div>
+
       <div class="tarjeta">
         <a routerLink="/" class="volver">
           <mat-icon>arrow_back</mat-icon>
@@ -35,13 +38,14 @@ import { ConsolaAuthService } from '../../../core/consola/consola-auth.service';
         </a>
 
         <div class="marca">
-          <mat-icon>shield_person</mat-icon>
+          <div class="marca-icono"><mat-icon>shield_person</mat-icon></div>
           <div>
             <strong>Consola de operación</strong>
             <span>Portal GuajiraNet</span>
           </div>
         </div>
 
+        <div class="restringido"><mat-icon>lock</mat-icon>Acceso restringido</div>
         <h1>Acceso de operador</h1>
         <p class="sub">Solo personal de la plataforma. El acceso queda registrado.</p>
 
@@ -100,36 +104,74 @@ import { ConsolaAuthService } from '../../../core/consola/consola-auth.service';
       }
 
       .pagina {
+        position: relative;
+        overflow: hidden;
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 24px;
-        background: #0f172a;
+        background: radial-gradient(circle at 20% 20%, #0e2a3d 0%, transparent 45%),
+          radial-gradient(circle at 85% 80%, #0e3a4a 0%, transparent 50%),
+          #0a1220;
+      }
+
+      .glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(70px);
+        opacity: .3;
+        pointer-events: none;
+        animation: flotar 9s ease-in-out infinite;
+      }
+      .glow.g1 { width: 380px; height: 380px; top: -120px; left: -120px; background: #0e7490; }
+      .glow.g2 { width: 340px; height: 340px; bottom: -140px; right: -100px; background: #0369a1; animation-delay: -4.5s; }
+
+      @keyframes flotar {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-18px); }
+      }
+
+      @keyframes entrada {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
       }
 
       .tarjeta {
+        position: relative;
+        z-index: 1;
         width: 100%;
         max-width: 380px;
         background: #fff;
-        border-radius: 14px;
+        border-radius: 16px;
         border: 1px solid #e2e8f0;
         box-shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
         padding: 36px 32px;
+        animation: entrada .55s cubic-bezier(0.16, 1, 0.3, 1) both;
       }
 
       .marca {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 28px;
+        margin-bottom: 20px;
       }
 
-      .marca mat-icon {
-        color: #0e7490;
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
+      .marca-icono {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #0e7490, #0369a1);
+        flex-shrink: 0;
+      }
+
+      .marca-icono mat-icon {
+        color: #fff;
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
       }
 
       .marca strong {
@@ -144,6 +186,27 @@ import { ConsolaAuthService } from '../../../core/consola/consola-auth.service';
         color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.08em;
+      }
+
+      .restringido {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: #f0fdfa;
+        color: #0e7490;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+
+      .restringido mat-icon {
+        font-size: 13px;
+        width: 13px;
+        height: 13px;
       }
 
       h1 {
@@ -208,6 +271,11 @@ import { ConsolaAuthService } from '../../../core/consola/consola-auth.service';
         font-size: 18px;
         width: 18px;
         height: 18px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .glow { animation: none; }
+        .tarjeta { animation: none; }
       }
     `,
   ],

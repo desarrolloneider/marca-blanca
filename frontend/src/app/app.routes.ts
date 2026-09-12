@@ -9,7 +9,6 @@ import { MisModulosComponent } from './features/empresas/pages/mis-modulos/mis-m
 import { MiMarcaComponent } from './features/empresas/pages/mi-marca/mi-marca.component';
 import { SelectorTemaLoginComponent } from './features/empresas/pages/selector-tema-login/selector-tema-login.component';
 import { ListaUsuariosComponent } from './features/usuarios/pages/lista-usuarios/lista-usuarios.component';
-import { Pbx3cxDetalleComponent } from './features/3cx/pages/detalle/pbx-3cx-detalle.component';
 import { Pbx3cxPanelComponent } from './features/3cx/pages/panel/pbx-3cx-panel.component';
 import { ShellComponent } from './layout/shell.component';
 
@@ -40,7 +39,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/omnicanal-liwa/pages/detalle/omnicanal-detalle.component').then((m) => m.OmnicanalDetalleComponent),
   },
-  { path: 'modulos/pbx-3cx', component: Pbx3cxDetalleComponent },
+  {
+    path: 'modulos/pbx-3cx',
+    // Lazy por la misma razon que omnicanal arriba: importa ScrollRevealDirective
+    // (GSAP + ScrollTrigger) y esta ruta se cargaba eager, lo que rompio el
+    // presupuesto de bundle inicial (ver angular.json, maximumError: 1mb).
+    loadComponent: () =>
+      import('./features/3cx/pages/detalle/pbx-3cx-detalle.component').then((m) => m.Pbx3cxDetalleComponent),
+  },
   {
     path: '',
     component: ShellComponent,

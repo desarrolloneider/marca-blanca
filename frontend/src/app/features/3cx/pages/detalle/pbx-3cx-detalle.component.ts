@@ -2,14 +2,17 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { ScrollRevealDirective } from '../../../../shared/animations/scroll-reveal.directive';
 
 @Component({
   selector: 'app-pbx-3cx-detalle',
   standalone: true,
-  imports: [RouterLink, MatButtonModule, MatIconModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, ScrollRevealDirective],
   template: `
     <div class="module-detail">
       <section class="module-hero">
+        <div class="hero-glow g1"></div>
+        <div class="hero-glow g2"></div>
         <div class="hero-pattern"></div>
         <div class="hero-inner">
           <a routerLink="/" class="back-link">
@@ -17,17 +20,19 @@ import { MatIconModule } from '@angular/material/icon';
             Volver al inicio
           </a>
 
-          <div class="module-icon-lg">
+          <div class="module-icon-lg" appScrollReveal>
             <mat-icon>call</mat-icon>
           </div>
-          <div class="eyebrow"><span></span>MÓDULO DE TELEFONÍA</div>
-          <h1>PBX 3CX</h1>
-          <p>
+          <div class="eyebrow" appScrollReveal [appScrollRevealDelay]="0.05"><span></span>MÓDULO DE TELEFONÍA</div>
+          <h1 appScrollReveal [appScrollRevealDelay]="0.1">
+            Tu central <span class="highlight">3CX</span>, integrada a la plataforma.
+          </h1>
+          <p appScrollReveal [appScrollRevealDelay]="0.15">
             Integración telefónica para gestionar llamadas de tu empresa
             directamente desde la plataforma, sin duplicar infraestructura.
           </p>
 
-          <div class="hero-highlights">
+          <div class="hero-highlights" appScrollReveal [appScrollRevealDelay]="0.2">
             <span><mat-icon>bolt</mat-icon> Conexión en minutos</span>
             <span><mat-icon>dns</mat-icon> Usa tu central 3CX existente</span>
             <span><mat-icon>history</mat-icon> Historial completo de llamadas</span>
@@ -36,30 +41,33 @@ import { MatIconModule } from '@angular/material/icon';
       </section>
 
       <section class="module-body">
-        <div class="section-heading">
+        <div class="section-heading" appScrollReveal>
           <div class="eyebrow dark"><span></span>¿QUÉ INCLUYE?</div>
           <h2>Todo lo que tu equipo necesita para gestionar llamadas.</h2>
         </div>
 
         <div class="feature-grid">
-          <div class="feature-card">
+          <div class="feature-card" appScrollReveal [appScrollRevealDelay]="0.05" (mousemove)="onSpotlight($event)">
+            <div class="card-glow"></div>
             <div class="feature-icon violet"><mat-icon>dialpad</mat-icon></div>
             <h3>Extensiones y llamadas</h3>
             <p>Administra las extensiones telefónicas de tu empresa y realiza/recibe llamadas desde la plataforma.</p>
           </div>
-          <div class="feature-card">
+          <div class="feature-card" appScrollReveal [appScrollRevealDelay]="0.12" (mousemove)="onSpotlight($event)">
+            <div class="card-glow"></div>
             <div class="feature-icon blue"><mat-icon>sync_alt</mat-icon></div>
             <h3>Integración con 3CX</h3>
             <p>Conecta tu central telefónica 3CX existente sin duplicar infraestructura.</p>
           </div>
-          <div class="feature-card">
+          <div class="feature-card" appScrollReveal [appScrollRevealDelay]="0.19" (mousemove)="onSpotlight($event)">
+            <div class="card-glow"></div>
             <div class="feature-icon green"><mat-icon>history</mat-icon></div>
             <h3>Registro de llamadas</h3>
             <p>Historial completo de llamadas entrantes y salientes por usuario y por empresa.</p>
           </div>
         </div>
 
-        <div class="cta-panel">
+        <div class="cta-panel" appScrollReveal>
           <div>
             <h3>Listo para conectar tu central telefónica.</h3>
             <p>Actívalo desde el wizard de registro o desde "Mis módulos" si tu empresa ya tiene una cuenta.</p>
@@ -107,6 +115,22 @@ import { MatIconModule } from '@angular/material/icon';
       padding: 40px 24px 64px;
     }
 
+    .hero-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: .35;
+      pointer-events: none;
+      animation: flotar 9s ease-in-out infinite;
+    }
+    .hero-glow.g1 { width: 360px; height: 360px; top: -120px; left: -100px; background: #2563eb; }
+    .hero-glow.g2 { width: 320px; height: 320px; bottom: -140px; right: -80px; background: #38bdf8; animation-delay: -4.5s; }
+
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-18px); }
+    }
+
     .hero-pattern {
       position: absolute;
       inset: 0;
@@ -119,6 +143,7 @@ import { MatIconModule } from '@angular/material/icon';
 
     .hero-inner {
       position: relative;
+      z-index: 1;
       max-width: 720px;
       margin: 0 auto;
       text-align: center;
@@ -173,6 +198,13 @@ import { MatIconModule } from '@angular/material/icon';
       font-weight: 800;
       margin: 0 0 14px;
       letter-spacing: -.02em;
+    }
+
+    .module-hero h1 .highlight {
+      background: linear-gradient(90deg, #86b4ff, #67e8f9);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .module-hero p {
@@ -243,11 +275,32 @@ import { MatIconModule } from '@angular/material/icon';
     }
 
     .feature-card {
+      position: relative;
+      overflow: hidden;
       background: #fff;
       border: 1px solid #e8edf4;
       border-radius: 16px;
       padding: 26px 22px;
       box-shadow: 0 8px 25px rgba(30, 55, 90, .04);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px rgba(30, 55, 90, .08);
+    }
+
+    .card-glow {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .3s ease;
+      pointer-events: none;
+      background: radial-gradient(220px circle at var(--x, 50%) var(--y, 50%), rgba(37, 99, 235, .08), transparent 60%);
+    }
+
+    .feature-card:hover .card-glow {
+      opacity: 1;
     }
 
     .feature-icon {
@@ -334,6 +387,20 @@ import { MatIconModule } from '@angular/material/icon';
         display: flex;
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-glow { animation: none; }
+    }
   `],
 })
-export class Pbx3cxDetalleComponent {}
+export class Pbx3cxDetalleComponent {
+  // Spotlight que sigue el mouse dentro de cada tarjeta -- mismo patron
+  // usado en el hero del home (ver home.component.ts) para mantener
+  // consistencia visual entre la landing y las paginas de modulo.
+  protected onSpotlight(evento: MouseEvent): void {
+    const tarjeta = evento.currentTarget as HTMLElement;
+    const rect = tarjeta.getBoundingClientRect();
+    tarjeta.style.setProperty('--x', `${evento.clientX - rect.left}px`);
+    tarjeta.style.setProperty('--y', `${evento.clientY - rect.top}px`);
+  }
+}

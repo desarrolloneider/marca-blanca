@@ -32,10 +32,29 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
     <div class="marco">
       <app-consola-nav />
 
+      <div class="stats">
+        <div class="stat-card total">
+          <div class="stat-icono"><mat-icon>apartment</mat-icon></div>
+          <div><strong>{{ empresas().length }}</strong><span>Total empresas</span></div>
+        </div>
+        <div class="stat-card activas">
+          <div class="stat-icono"><mat-icon>check_circle</mat-icon></div>
+          <div><strong>{{ conteoPorEstado('activa') }}</strong><span>Activas</span></div>
+        </div>
+        <div class="stat-card pendientes">
+          <div class="stat-icono"><mat-icon>hourglass_top</mat-icon></div>
+          <div><strong>{{ conteoPorEstado('pendiente_aprovisionamiento') }}</strong><span>Pendientes</span></div>
+        </div>
+        <div class="stat-card suspendidas">
+          <div class="stat-icono"><mat-icon>block</mat-icon></div>
+          <div><strong>{{ conteoPorEstado('suspendida') }}</strong><span>Suspendidas</span></div>
+        </div>
+      </div>
+
       <section class="panel">
         <div class="panel-cabecera">
-          <h1>Empresas <span class="conteo">{{ empresas().length }}</span></h1>
-          <button mat-button type="button" (click)="cargar()" [disabled]="cargando()">
+          <h1><mat-icon>apartment</mat-icon>Empresas <span class="conteo">{{ empresas().length }}</span></h1>
+          <button mat-stroked-button type="button" (click)="cargar()" [disabled]="cargando()">
             <mat-icon>refresh</mat-icon>
             Actualizar
           </button>
@@ -57,8 +76,11 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
                 <th mat-header-cell *matHeaderCellDef>Empresa</th>
                 <td mat-cell *matCellDef="let e">
                   <div class="celda-empresa">
-                    <span class="nombre">{{ e.nombreLegal }}</span>
-                    <span class="ident">{{ e.identificador }} · {{ e.dominio }}</span>
+                    <span class="avatar">{{ e.nombreLegal.charAt(0) }}</span>
+                    <div>
+                      <span class="nombre">{{ e.nombreLegal }}</span>
+                      <span class="ident">{{ e.identificador }} · {{ e.dominio }}</span>
+                    </div>
                   </div>
                 </td>
               </ng-container>
@@ -138,9 +160,61 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
       }
 
       .marco {
-        max-width: 1080px;
+        max-width: 1180px;
         margin: 0 auto;
         padding: 24px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 18px 20px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .04);
+      }
+
+      .stat-icono {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
+
+      .stat-icono mat-icon {
+        color: #fff;
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+
+      .stat-card.total .stat-icono { background: linear-gradient(135deg, #64748b, #334155); }
+      .stat-card.activas .stat-icono { background: linear-gradient(135deg, #34d399, #059669); }
+      .stat-card.pendientes .stat-icono { background: linear-gradient(135deg, #fbbf24, #d97706); }
+      .stat-card.suspendidas .stat-icono { background: linear-gradient(135deg, #f87171, #dc2626); }
+
+      .stat-card strong {
+        display: block;
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.2;
+      }
+
+      .stat-card span {
+        font-size: 0.78rem;
+        color: #64748b;
       }
 
       .panel {
@@ -154,19 +228,26 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
       }
 
       h1 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-size: 1.2rem;
         font-weight: 700;
         margin: 0;
         color: #0f172a;
       }
 
+      h1 mat-icon {
+        color: #0e7490;
+      }
+
       .conteo {
         display: inline-block;
-        margin-left: 8px;
+        margin-left: 4px;
         font-size: 0.8rem;
         font-weight: 600;
         color: #0e7490;
@@ -204,7 +285,31 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
         width: 100%;
       }
 
+      tr.mat-mdc-row:hover {
+        background: #f8fafc;
+      }
+
       .celda-empresa {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #22d3ee, #0e7490);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+      }
+
+      .celda-empresa > div {
         display: flex;
         flex-direction: column;
         gap: 2px;
@@ -223,10 +328,10 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
       .chip {
         display: inline-block;
         font-size: 0.72rem;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        padding: 3px 9px;
+        padding: 4px 10px;
         border-radius: 999px;
         background: #e2e8f0;
         color: #334155;
@@ -250,6 +355,12 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
       .chip[data-estado='borrador'] {
         background: #e0e7ff;
         color: #3730a3;
+      }
+
+      @media (max-width: 900px) {
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
     `,
   ],
@@ -293,6 +404,10 @@ export class ConsolaEmpresasComponent {
 
   protected etiquetaEstado(estado: string): string {
     return estado.replaceAll('_', ' ');
+  }
+
+  protected conteoPorEstado(estado: string): number {
+    return this.empresas().filter((e) => e.estado === estado).length;
   }
 
   private mutar(id: string, accion$: ReturnType<ConsolaEmpresasService['suspender']>, ok: string): void {

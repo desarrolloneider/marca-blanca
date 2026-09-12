@@ -57,15 +57,19 @@ const TIPOS_PANTALLA = [
 
       @if (empresa(); as e) {
         <header>
+          <div class="avatar-header">{{ e.nombreLegal.charAt(0) }}</div>
           <div>
             <h1>{{ e.nombreLegal }}</h1>
-            <p class="ident">{{ e.identificador }} · {{ e.dominio }} · <span class="chip">{{ e.estado }}</span></p>
+            <p class="ident">
+              {{ e.identificador }} · {{ e.dominio }} ·
+              <span class="chip" [attr.data-estado]="e.estado">{{ e.estado }}</span>
+            </p>
           </div>
         </header>
 
         <!-- DATOS -->
         <section class="tarjeta">
-          <h2>Datos de contacto</h2>
+          <h2><span class="h2-icono azul"><mat-icon>badge</mat-icon></span>Datos de contacto</h2>
           <p class="hint">
             El correo de acá es el de contacto (facturación y avisos de la plataforma). No cambia el
             correo con el que inician sesión los usuarios de la empresa.
@@ -101,7 +105,7 @@ const TIPOS_PANTALLA = [
 
         <!-- MARCA -->
         <section class="tarjeta">
-          <h2>Marca</h2>
+          <h2><span class="h2-icono violeta"><mat-icon>palette</mat-icon></span>Marca</h2>
           <form [formGroup]="marcaForm" (ngSubmit)="guardarMarca()">
             <div class="grid">
               <label class="color">
@@ -141,13 +145,14 @@ const TIPOS_PANTALLA = [
 
         <!-- MÓDULOS -->
         <section class="tarjeta">
-          <h2>Módulos</h2>
+          <h2><span class="h2-icono verde"><mat-icon>extension</mat-icon></span>Módulos</h2>
           @if (modulos().length === 0) {
             <p class="vacio">No hay módulos en el catálogo.</p>
           }
           <ul class="modulos">
             @for (m of modulos(); track m.codigo) {
-              <li>
+              <li [class.activo]="m.activo">
+                <div class="modulo-icono" [class.activo]="m.activo"><mat-icon>{{ m.activo ? 'check' : 'power_settings_new' }}</mat-icon></div>
                 <div>
                   <span class="nombre">{{ m.nombre }}</span>
                   <span class="codigo">{{ m.codigo }}</span>
@@ -165,8 +170,8 @@ const TIPOS_PANTALLA = [
         <!-- OMNICANAL (LIWA) -- solo el super admin ve/toca esto. El tenant
              ni siquiera tiene el toggle de IA en su propia pantalla de
              configuracion (se le oculto: viene con default de plataforma). -->
-        <section class="tarjeta">
-          <h2>Omnicanal (Liwa)</h2>
+        <section class="tarjeta tarjeta-sensible">
+          <h2><span class="h2-icono ambar"><mat-icon>admin_panel_settings</mat-icon></span>Omnicanal (Liwa)</h2>
           @if (cargandoOmnicanal()) {
             <p class="hint">Cargando…</p>
           } @else if (omnicanal(); as o) {
@@ -215,19 +220,36 @@ const TIPOS_PANTALLA = [
       }
       .volver mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
-      header { margin-bottom: 8px; }
+      header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+      .avatar-header {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #22d3ee, #0e7490);
+        color: #fff;
+        font-weight: 800;
+        font-size: 1.3rem;
+        text-transform: uppercase;
+      }
       h1 { font-size: 1.35rem; font-weight: 700; margin: 0; color: #0f172a; }
       .ident { margin: 4px 0 0; font-size: 0.82rem; color: #64748b; }
       .chip {
         display: inline-block;
         font-size: 0.7rem;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        padding: 2px 8px;
+        padding: 2px 9px;
         border-radius: 999px;
         background: #e2e8f0;
         color: #334155;
       }
+      .chip[data-estado='activa'] { background: #dcfce7; color: #166534; }
+      .chip[data-estado='suspendida'] { background: #fee2e2; color: #991b1b; }
+      .chip[data-estado='pendiente_aprovisionamiento'] { background: #fef9c3; color: #854d0e; }
+      .chip[data-estado='borrador'] { background: #e0e7ff; color: #3730a3; }
 
       .tarjeta {
         background: #fff;
@@ -235,8 +257,26 @@ const TIPOS_PANTALLA = [
         border-radius: 14px;
         padding: 20px 22px;
         margin-top: 16px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .03);
       }
-      h2 { font-size: 1.05rem; font-weight: 700; margin: 0 0 14px; color: #0f172a; }
+      .tarjeta-sensible {
+        border-color: #fde68a;
+        background: linear-gradient(180deg, #fffbeb 0%, #fff 90px);
+      }
+      h2 { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 700; margin: 0 0 14px; color: #0f172a; }
+      .h2-icono {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
+      .h2-icono mat-icon { color: #fff; font-size: 17px; width: 17px; height: 17px; }
+      .h2-icono.azul { background: linear-gradient(135deg, #38bdf8, #2563eb); }
+      .h2-icono.violeta { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+      .h2-icono.verde { background: linear-gradient(135deg, #34d399, #059669); }
+      .h2-icono.ambar { background: linear-gradient(135deg, #fbbf24, #d97706); }
       .hint { margin: -6px 0 16px; font-size: 0.82rem; color: #64748b; line-height: 1.5; }
 
       .grid {
@@ -264,16 +304,31 @@ const TIPOS_PANTALLA = [
         cursor: pointer;
       }
 
-      .modulos { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+      .modulos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
       .modulos li {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 12px;
         padding: 10px 12px;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 10px;
+        transition: border-color .15s ease, background .15s ease;
       }
-      .modulos .nombre { font-weight: 600; color: #0f172a; }
+      .modulos li.activo { border-color: #bbf7d0; background: #f0fdf4; }
+      .modulos li > div { flex: 1; }
+      .modulo-icono {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        background: #e2e8f0;
+        color: #64748b;
+      }
+      .modulo-icono.activo { background: linear-gradient(135deg, #34d399, #059669); color: #fff; }
+      .modulo-icono mat-icon { font-size: 17px; width: 17px; height: 17px; }
+      .modulos .nombre { display: block; font-weight: 600; color: #0f172a; }
       .modulos .codigo { display: block; font-size: 0.75rem; color: #94a3b8; }
 
       .vacio { color: #64748b; font-size: 0.88rem; }
