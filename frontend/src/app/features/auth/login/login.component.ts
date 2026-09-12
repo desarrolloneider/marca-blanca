@@ -67,20 +67,6 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
          ngTemplateOutlet para no triplicar los bindings del form. -->
     <ng-template #formularioTpl>
       <form [formGroup]="form" (ngSubmit)="submit()">
-        @if (sinSubdominio()) {
-          <!-- Solo aparece cuando no hay subdominio (ej. probando en un
-               dominio sin wildcard configurado todavia, como *.onrender.com)
-               -- ahi el correo solo no alcanza para saber la empresa si el
-               mismo correo se uso para registrar varias (ver resolver por
-               correo en submit(), que falla si es ambiguo). -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Identificador de tu empresa (opcional)</mat-label>
-            <input matInput type="text" formControlName="identificadorEmpresa" autocomplete="off" />
-            <mat-icon matPrefix>business</mat-icon>
-            <mat-hint>Solo hace falta si tu correo se uso para mas de una empresa de prueba.</mat-hint>
-          </mat-form-field>
-        }
-
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Correo electrónico</mat-label>
           <input matInput type="email" formControlName="correo" autocomplete="email" />
@@ -163,7 +149,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
           [style.--brand-light]="colorPrimario()"
           [style.--brand-dark]="colorSecundario()"
         >
-          <div class="tarjeta-centrada">
+          <div class="tarjeta-centrada entrada-animada">
             <div class="logo-centrado">
               <ng-container [ngTemplateOutlet]="logoTpl" [ngTemplateOutletContext]="{ variante: 'negro' }"></ng-container>
             </div>
@@ -180,7 +166,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
           [style.--brand-dark]="colorSecundario()"
         >
           <div class="fondo-overlay"></div>
-          <div class="tarjeta-flotante">
+          <div class="tarjeta-flotante entrada-animada">
             <div class="logo-centrado">
               <ng-container [ngTemplateOutlet]="logoTpl"></ng-container>
             </div>
@@ -212,7 +198,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
             @if (marcaPublica()?.nombreEmpresa; as nombre) {
               <!-- Empresa identificada por el subdominio: el panel es de
                    ELLA, no un aviso publicitario de la plataforma. -->
-              <div class="brand-content brand-content-empresa">
+              <div class="brand-content brand-content-empresa entrada-animada">
                 <div class="brand-logo-grande">
                   <ng-container [ngTemplateOutlet]="logoTpl"></ng-container>
                 </div>
@@ -220,7 +206,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
                 <p class="brand-tagline">Inicia sesión para entrar a tu plataforma</p>
               </div>
             } @else {
-              <div class="brand-content">
+              <div class="brand-content entrada-animada">
                 <div class="brand-logo">
                   <ng-container [ngTemplateOutlet]="logoTpl"></ng-container>
                   <span>LINELCA</span>
@@ -250,7 +236,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
           </section>
 
           <section class="form-panel">
-            <div class="form-wrapper">
+            <div class="form-wrapper entrada-animada entrada-animada-retraso">
               <a routerLink="/" class="back-link">
                 <mat-icon>arrow_back</mat-icon>
                 Volver al inicio
@@ -723,6 +709,26 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
         max-width: 140px;
         object-fit: contain;
       }
+
+      /* ---------- Entrada animada ---------- */
+      @keyframes login-entrada {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .entrada-animada {
+        animation: login-entrada 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .entrada-animada-retraso {
+        animation-delay: 0.12s;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .entrada-animada {
+          animation: none;
+        }
+      }
     `,
   ],
 })
@@ -750,13 +756,7 @@ export class LoginComponent {
     correo: ['', [Validators.required, Validators.email]],
     contrasena: ['', [Validators.required]],
     recordarme: [false],
-    identificadorEmpresa: [''],
   });
-
-  // true cuando no hay subdominio de empresa (ver identificadorDesdeSubdominio) --
-  // ahi se muestra el campo manual de identificador, porque el resolver por
-  // correo solo funciona si el correo pertenece a una unica empresa activa.
-  protected readonly sinSubdominio = signal(identificadorDesdeSubdominio() === null);
 
   constructor() {
     const identificador = identificadorDesdeSubdominio();
@@ -791,8 +791,8 @@ export class LoginComponent {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    const { correo, contrasena, recordarme, identificadorEmpresa } = this.form.getRawValue();
-    const identificadorResuelto = identificadorDesdeSubdominio() || identificadorEmpresa.trim() || null;
+    const { correo, contrasena, recordarme } = this.form.getRawValue();
+    const identificadorResuelto = identificadorDesdeSubdominio();
     const identificadorEmpresa$ = identificadorResuelto
       ? of({ identificadorEmpresa: identificadorResuelto })
       : this.auth.resolverIdentificadorEmpresa(correo);
