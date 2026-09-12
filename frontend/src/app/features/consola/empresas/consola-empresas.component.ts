@@ -112,34 +112,36 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
               <ng-container matColumnDef="acciones">
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let e">
-                  <a
-                    mat-button
-                    [routerLink]="['/consola/empresas', e.id]"
-                    class="ver-editar"
-                  >
-                    Ver / editar
-                  </a>
-                  @if (e.estado === 'activa') {
-                    <button
+                  <div class="acciones-celda">
+                    <a
                       mat-stroked-button
-                      color="warn"
-                      type="button"
-                      [disabled]="ocupada() === e.id"
-                      (click)="suspender(e)"
+                      [routerLink]="['/consola/empresas', e.id]"
+                      class="ver-editar"
                     >
-                      Suspender
-                    </button>
-                  } @else if (e.estado === 'suspendida') {
-                    <button
-                      mat-stroked-button
-                      color="primary"
-                      type="button"
-                      [disabled]="ocupada() === e.id"
-                      (click)="reactivar(e)"
-                    >
-                      Reactivar
-                    </button>
-                  }
+                      Ver / editar
+                    </a>
+                    @if (e.estado === 'activa') {
+                      <button
+                        mat-stroked-button
+                        color="warn"
+                        type="button"
+                        [disabled]="ocupada() === e.id"
+                        (click)="suspender(e)"
+                      >
+                        Suspender
+                      </button>
+                    } @else if (e.estado === 'suspendida') {
+                      <button
+                        mat-stroked-button
+                        color="primary"
+                        type="button"
+                        [disabled]="ocupada() === e.id"
+                        (click)="reactivar(e)"
+                      >
+                        Reactivar
+                      </button>
+                    }
+                  </div>
                 </td>
               </ng-container>
 
@@ -160,7 +162,7 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
       }
 
       .marco {
-        max-width: 1180px;
+        max-width: 1440px;
         margin: 0 auto;
         padding: 24px;
       }
@@ -287,6 +289,34 @@ import { ConsolaNavComponent } from '../nav/consola-nav.component';
 
       tr.mat-mdc-row:hover {
         background: #f8fafc;
+      }
+
+      /* Filas mas compactas: menos alto por fila = menos scroll con listas largas. */
+      th.mat-mdc-header-cell,
+      td.mat-mdc-cell {
+        padding: 8px 12px !important;
+        white-space: nowrap;
+      }
+
+      td.mat-mdc-cell:first-of-type,
+      th.mat-mdc-header-cell:first-of-type {
+        padding-left: 4px !important;
+      }
+
+      .acciones-celda {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 8px;
+      }
+
+      .acciones-celda a,
+      .acciones-celda button {
+        height: 32px;
+        line-height: 30px;
+        padding: 0 12px !important;
+        font-size: 12.5px !important;
+        white-space: nowrap;
       }
 
       .celda-empresa {
