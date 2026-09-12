@@ -7,7 +7,7 @@ import { TemaPaginaService, TemaPagina } from '../core/temas/tema-pagina.service
 import { MarcaService } from '../core/identidad-visual/marca.service';
 import { BrandMarkComponent } from '../shared/brand/brand-mark.component';
 
-const CODIGO_A_TEMA_PAGINA: Record<number, TemaPagina> = { 1: 'clasico', 2: 'compacto', 3: 'encabezado' };
+const CODIGO_A_TEMA_PAGINA: Record<number, TemaPagina> = { 1: 'clasico', 2: 'derecha', 3: 'encabezado' };
 
 // Los items de navegacion son los mismos en los 2 layouts (sidebar lateral y
 // header arriba) -- se definen una sola vez y cada template los recorre con
@@ -60,7 +60,9 @@ const ITEMS_NAV: ItemNav[] = [
         <main class="page-content"><router-outlet /></main>
       </div>
     } @else {
-      <!-- Layout clasico/compacto: sidebar lateral (el original). -->
+      <!-- Layout clasico/derecha: sidebar lateral (el original) -- 'derecha'
+           usa exactamente el mismo markup, solo cambia de lado por CSS
+           (flex-direction: row-reverse en .tema-derecha). -->
       <div class="app-shell tema-{{ temaPagina.tema() }}">
         <aside class="sidebar">
           <div class="sidebar-brand">
@@ -135,10 +137,10 @@ const ITEMS_NAV: ItemNav[] = [
     .sidebar-nav a.active::before { display: none; }
     .sidebar-help { margin-top:auto; display:flex; gap:10px; align-items:center; border-top:1px solid #273650; padding:18px 8px; color:#9daac0; }.sidebar-help mat-icon { color:#6ea7ff; }.sidebar-help strong,.sidebar-help span { display:block; }.sidebar-help strong { color:#d7deeb; font-size:12px; }.sidebar-help span { font-size:11px; margin-top:3px; }.logout-button { display:flex; align-items:center; gap:11px; border:0; border-top:1px solid #273650; padding:15px 10px 0; margin:0; background:none; color:#9daac0; cursor:pointer; font:inherit; font-size:13px; text-align:left; }.logout-button:hover { color:#fff; }.logout-button mat-icon { font-size:19px; }
     .main-shell { flex:1; min-width:0; }.topbar { height:72px; box-sizing:border-box; background:#fff; border-bottom:1px solid #e6eaf1; display:flex; align-items:center; justify-content:space-between; padding:0 34px; }.breadcrumb { display:flex; align-items:center; gap:7px; color:#8b97aa; font-size:13px; }.breadcrumb mat-icon { width:17px; height:17px; font-size:17px; }.breadcrumb strong { color:#26334a; font-weight:600; }.topbar-actions { display:flex; align-items:center; gap:18px; }.topbar-actions button { position:relative; color:#66748a; }.notification-dot { position:absolute; top:8px; right:8px; width:6px; height:6px; border-radius:50%; background:#ef6b5f; border:2px solid white; }.profile { display:flex; align-items:center; gap:9px; }.avatar { width:34px; height:34px; border-radius:10px; background:#e6efff; color:#2468d9; display:grid; place-items:center; font-size:12px; font-weight:800; }.profile strong,.profile span { display:block; }.profile strong { font-size:12px; color:#27344a; }.profile span { font-size:11px; color:#8b97aa; margin-top:2px; }.profile > mat-icon { color:#8b97aa; font-size:18px; }.page-content { padding: 30px 34px 48px; max-width: 1500px; margin:0 auto; box-sizing:border-box; }
-    .app-shell.tema-compacto .sidebar { width: 210px; flex-basis: 210px; padding: 16px 12px 14px; }
-    .app-shell.tema-compacto .page-content { padding: 18px 22px 30px; }
-    .app-shell.tema-compacto .topbar { height: 58px; padding: 0 22px; }
-    .app-shell.tema-compacto .sidebar-nav a { padding: 8px 10px; font-size: 12.5px; }
+    /* "A la derecha": mismo sidebar, solo se invierte el orden del flex --
+       el contenido queda a la izquierda y la barra de navegacion a la derecha. */
+    .app-shell.tema-derecha { flex-direction: row-reverse; }
+    .app-shell.tema-derecha .sidebar { box-shadow: -6px 0 18px rgba(15, 23, 42, .06); }
     @media (max-width: 800px) { .sidebar { width:70px; flex-basis:70px; padding:20px 10px; }.sidebar-brand { padding:0 8px 28px; }.sidebar-brand > div:last-child,.workspace-card,.sidebar-nav span,.sidebar-help div,.logout-button span { display:none; }.sidebar-nav a { justify-content:center; padding:12px; }.sidebar-help { justify-content:center; padding:18px 0; }.logout-button { justify-content:center; padding-left:0; padding-right:0; }.topbar { padding:0 18px; }.breadcrumb span,.breadcrumb mat-icon { display:none; }.profile > div:last-of-type,.profile > mat-icon { display:none; }.page-content { padding:22px 16px 36px; } }
 
     /* ---------- Layout "Header arriba" (tema-encabezado) ---------- */

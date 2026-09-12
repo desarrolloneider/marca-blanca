@@ -17,6 +17,7 @@ import { Modulo } from '../../../core/admin/models';
 import { RegistroEmpresaService } from './registro-empresa.service';
 import { FinalizarRegistroResponse, PersonalizacionRequest } from './registro-empresa.models';
 import { BrandMarkComponent } from '../../../shared/brand/brand-mark.component';
+import { PaletaPredefinida, PALETAS_PREDEFINIDAS } from '../../../shared/brand/paletas-marca';
 
 // Dominio base solo para el preview visual del identificador (antes de que
 // la empresa exista, el backend todavia no ha dicho cual es el real).
@@ -87,32 +88,8 @@ interface OpcionTemaPagina {
 
 const OPCIONES_TEMA_PAGINA: OpcionTemaPagina[] = [
   { codigo: 'clasico', nombre: 'Clásico', descripcion: 'Barra lateral a la izquierda con la navegación.', icono: 'view_agenda' },
-  { codigo: 'compacto', nombre: 'Compacto', descripcion: 'La misma barra lateral, con menos espacio entre elementos.', icono: 'view_headline' },
+  { codigo: 'derecha', nombre: 'Barra a la derecha', descripcion: 'La misma barra de navegación, ubicada a la derecha.', icono: 'view_headline' },
   { codigo: 'encabezado', nombre: 'Header arriba', descripcion: 'Sin barra lateral: la navegación va arriba, en horizontal.', icono: 'view_stream' },
-];
-
-interface PaletaPredefinida {
-  nombre: string;
-  primario: string;
-  secundario: string;
-}
-
-// Paletas de dos colores tipo "swatch" (inspirado en selectores de marca como
-// el de Odoo) para elegir rapido; el usuario igual puede afinar con los
-// selectores de color de abajo.
-const PALETAS_PREDEFINIDAS: PaletaPredefinida[] = [
-  { nombre: 'Coast', primario: '#2563eb', secundario: '#facc95' },
-  { nombre: 'Candy', primario: '#3b82f6', secundario: '#fbcfe8' },
-  { nombre: 'Mint', primario: '#a78bfa', secundario: '#86efac' },
-  { nombre: 'Cobalt', primario: '#1d4ed8', secundario: '#d6c9a8' },
-  { nombre: 'Coral', primario: '#f87171', secundario: '#fde68a' },
-  { nombre: 'Slate', primario: '#f87171', secundario: '#334155' },
-  { nombre: 'Esmeralda', primario: '#10b981', secundario: '#134e4a' },
-  { nombre: 'Forest', primario: '#166534', secundario: '#a3a380' },
-  { nombre: 'Violeta', primario: '#7c3aed', secundario: '#c2410c' },
-  { nombre: 'Burgundy', primario: '#9f1239', secundario: '#1e3a5f' },
-  { nombre: 'Ember', primario: '#ea580c', secundario: '#bae6fd' },
-  { nombre: 'Midnight', primario: '#0f172a', secundario: '#7dd3fc' },
 ];
 
 const MAX_LOGO_BYTES = 500 * 1024;
@@ -603,8 +580,14 @@ interface EstadoWizardGuardado {
                               </div>
                             </div>
                           }
-                          @case ('compacto') {
-                            <div class="pagina-window pagina-window-compacto">
+                          @case ('derecha') {
+                            <div class="pagina-window pagina-window-derecha">
+                              <div class="pagina-content">
+                                <span class="pagina-barra" [style.background]="colorPrimario()"></span>
+                                <span class="pagina-linea ancha"></span>
+                                <span class="pagina-linea"></span>
+                                <div class="pagina-cards"><i></i><i></i><i></i></div>
+                              </div>
                               <div class="pagina-sidebar" [style.background]="'linear-gradient(180deg, ' + colorSecundario() + ', ' + colorPrimario() + ')'">
                                 @if (logoDataUrl()) {
                                   <img [src]="logoDataUrl()" alt="" class="pagina-sidebar-logo" />
@@ -612,10 +595,6 @@ interface EstadoWizardGuardado {
                                 <i class="pagina-sidebar-item activo"></i>
                                 <i class="pagina-sidebar-item"></i>
                                 <i class="pagina-sidebar-item"></i>
-                              </div>
-                              <div class="pagina-content">
-                                <span class="pagina-linea ancha"></span>
-                                <div class="pagina-lista-lineas"><i></i><i></i><i></i><i></i></div>
                               </div>
                             </div>
                           }

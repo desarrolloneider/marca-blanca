@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MarcaService } from '../../../../core/identidad-visual/marca.service';
 import { MarcaDeEmpresa } from '../../../../core/identidad-visual/models';
 import { TemaPaginaService, TemaPagina } from '../../../../core/temas/tema-pagina.service';
+import { PaletaPredefinida, PALETAS_PREDEFINIDAS } from '../../../../shared/brand/paletas-marca';
 
 const FORMATO_HEX = /^#[0-9A-Fa-f]{6}$/;
 // El backend todavia no tiene subida real de logos -- solo guarda una URL
@@ -61,7 +62,7 @@ interface OpcionPagina {
 
 const OPCIONES_PAGINA: OpcionPagina[] = [
   { codigo: 'clasico', numero: 1, nombre: 'Clásico', descripcion: 'Barra lateral a la izquierda con la navegación. El diseño actual.' },
-  { codigo: 'compacto', numero: 2, nombre: 'Compacto', descripcion: 'La misma barra lateral, con menos espacio entre elementos.' },
+  { codigo: 'derecha', numero: 2, nombre: 'Barra a la derecha', descripcion: 'La misma barra de navegación, pero ubicada a la derecha de la pantalla.' },
   { codigo: 'encabezado', numero: 3, nombre: 'Header arriba', descripcion: 'Sin barra lateral: la navegación va en una franja horizontal arriba, con más ancho para el contenido.' },
 ];
 
@@ -125,6 +126,29 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
                   archivo en sí.
                 </p>
               }
+
+              <div class="paleta-field">
+                <span class="campo-label">Paleta de colores</span>
+                <div class="paleta-grid">
+                  @for (paleta of paletasPredefinidas; track paleta.nombre) {
+                    <button
+                      type="button"
+                      class="paleta-swatch"
+                      [class.paleta-swatch-activa]="form.value.colorPrimario === paleta.primario && form.value.colorSecundario === paleta.secundario"
+                      (click)="elegirPaleta(paleta)"
+                    >
+                      <span class="paleta-colores">
+                        <span class="paleta-mitad" [style.background]="paleta.primario"></span>
+                        <span class="paleta-mitad" [style.background]="paleta.secundario"></span>
+                      </span>
+                      <span class="paleta-nombre">{{ paleta.nombre }}</span>
+                      @if (form.value.colorPrimario === paleta.primario && form.value.colorSecundario === paleta.secundario) {
+                        <mat-icon class="paleta-check" inline>check_circle</mat-icon>
+                      }
+                    </button>
+                  }
+                </div>
+              </div>
 
               <div class="color-field">
                 <mat-form-field appearance="outline">
@@ -452,6 +476,78 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
 
     .marca-form mat-form-field {
       width: 100%;
+    }
+
+    .campo-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .paleta-field {
+      margin-bottom: 18px;
+    }
+
+    .paleta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .paleta-swatch {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 6px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+
+    .paleta-swatch:hover {
+      border-color: #cbd5e1;
+    }
+
+    .paleta-swatch-activa {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px #2563eb;
+    }
+
+    .paleta-colores {
+      display: flex;
+      width: 100%;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .paleta-mitad {
+      flex: 1;
+    }
+
+    .paleta-nombre {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .paleta-check {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #2563eb;
+      background: #fff;
+      border-radius: 50%;
     }
 
     .color-field {
@@ -784,10 +880,12 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
       box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
     }
 
-    /* Densidad simulada variando el gap/tamano de las filas -- asi se ve la
-       diferencia real que aplica ShellComponent segun el tema elegido. */
-    .preview-pagina-compacto .preview-pagina-contenido { gap: 6px; }
-    .preview-pagina-compacto .preview-pagina-card { height: 22px; }
+    /* "A la derecha": mismo grid, solo se invierte el orden de las columnas
+       y de los hijos -- asi se ve igual que lo que hace ShellComponent
+       (flex-direction: row-reverse) con el sidebar real. */
+    .preview-pagina-derecha { grid-template-columns: 1fr 66px; }
+    .preview-pagina-derecha .preview-pagina-sidebar { order: 2; }
+    .preview-pagina-derecha .preview-pagina-contenido { order: 1; }
 
     /* "Header arriba": layout real distinto (columna, no grid de sidebar) --
        mismo que implementa ShellComponent cuando tipoPantallaPrincipal=3. */
@@ -814,6 +912,7 @@ export class MiMarcaComponent implements OnInit {
 
   protected readonly opcionesLogin = OPCIONES_LOGIN;
   protected readonly opcionesPagina = OPCIONES_PAGINA;
+  protected readonly paletasPredefinidas = PALETAS_PREDEFINIDAS;
 
   protected readonly cargando = signal(true);
   protected readonly guardando = signal(false);
@@ -944,6 +1043,10 @@ export class MiMarcaComponent implements OnInit {
         this.snackBar.open('No se pudo guardar el diseño. Intenta de nuevo.', 'Cerrar', { duration: 4000 });
       },
     });
+  }
+
+  elegirPaleta(paleta: PaletaPredefinida): void {
+    this.form.patchValue({ colorPrimario: paleta.primario, colorSecundario: paleta.secundario });
   }
 
   protected esHexValido(valor: string | null | undefined): boolean {

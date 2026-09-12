@@ -19,8 +19,8 @@ const TIPOS_LOGIN = [
   { valor: 3, etiqueta: 'Fondo' },
 ];
 const TIPOS_PANTALLA = [
-  { valor: 1, etiqueta: 'Clásico (sidebar)' },
-  { valor: 2, etiqueta: 'Compacto (sidebar)' },
+  { valor: 1, etiqueta: 'Clásico (sidebar izquierda)' },
+  { valor: 2, etiqueta: 'Sidebar a la derecha' },
   { valor: 3, etiqueta: 'Header arriba' },
 ];
 
