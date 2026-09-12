@@ -74,3 +74,6 @@ databaseChangeLog:
   - include:
       file: changes/0024-crear-tabla-empresas-omnicanal.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/0025-agregar-ajuste-logo.yaml
+      relativeToChangelogFile: true

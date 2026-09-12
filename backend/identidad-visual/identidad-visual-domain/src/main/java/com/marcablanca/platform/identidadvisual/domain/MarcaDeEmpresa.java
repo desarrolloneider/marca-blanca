@@ -17,5 +17,9 @@ public record MarcaDeEmpresa(
         // solo se fijaban una vez durante el registro; ahora tambien se
         // pueden cambiar aqui, self-service, ya con la empresa activa.
         Integer tipoLogin,
-        Integer tipoPantallaPrincipal) {
+        Integer tipoPantallaPrincipal,
+        // 1=contener, 2=cubrir, 3=estirar -- como se ajusta urlLogo dentro de
+        // su caja donde sea que se muestre (login, sidebar). Ver
+        // 0025-agregar-ajuste-logo.yaml.
+        Integer ajusteLogo) {
 }

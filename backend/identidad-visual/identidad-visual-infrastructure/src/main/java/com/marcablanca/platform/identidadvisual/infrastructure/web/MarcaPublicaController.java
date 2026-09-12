@@ -39,6 +39,7 @@ public class MarcaPublicaController {
                 marca.dominioPropio(),
                 marca.tipoLogin(),
                 marca.tipoPantallaPrincipal(),
+                marca.ajusteLogo(),
                 nombreEmpresa
         );
     }

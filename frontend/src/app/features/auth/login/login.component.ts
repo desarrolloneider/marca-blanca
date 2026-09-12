@@ -136,7 +136,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
          aca abajo. -->
     <ng-template #logoTpl let-variante="variante">
       @if (marcaPublica()?.urlLogo; as logo) {
-        <img [src]="logo" alt="" class="brand-logo-img" />
+        <img [src]="logo" alt="" class="brand-logo-img" [style.object-fit]="ajusteLogoCss()" />
       } @else {
         <app-brand-mark class="brand-logo-icon" [variante]="variante || 'blanco'" />
       }
@@ -570,8 +570,8 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
         align-items: center;
         justify-content: center;
         padding: 24px;
-        background: radial-gradient(circle at 15% 15%, #4c1d95 0%, transparent 45%),
-          radial-gradient(circle at 85% 30%, #1d4ed8 0%, transparent 50%),
+        background: radial-gradient(circle at 15% 15%, var(--brand-dark) 0%, transparent 45%),
+          radial-gradient(circle at 85% 30%, var(--brand-light) 0%, transparent 50%),
           linear-gradient(160deg, #05030f 0%, #0f0a24 55%, #1a1035 100%);
         overflow: hidden;
       }
@@ -579,8 +579,8 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
       .fondo-overlay {
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.18), transparent 55%),
-          radial-gradient(circle at 80% 15%, rgba(37, 99, 235, 0.18), transparent 50%);
+        background: radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--brand-dark) 45%, transparent), transparent 55%),
+          radial-gradient(circle at 80% 15%, color-mix(in srgb, var(--brand-light) 45%, transparent), transparent 50%);
       }
 
       .tarjeta-flotante {
@@ -626,7 +626,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #7c3aed, #2563eb);
+        background: linear-gradient(135deg, var(--brand-dark), var(--brand-light));
         margin-bottom: 10px;
       }
 
@@ -700,7 +700,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
       }
 
       .tema-fondo .submit-btn {
-        background: linear-gradient(90deg, #7c3aed, #2563eb) !important;
+        background: linear-gradient(90deg, var(--brand-dark), var(--brand-light)) !important;
         border-radius: 12px;
       }
 
@@ -751,6 +751,14 @@ export class LoginComponent {
   protected readonly colorPrimario = computed(() => this.marcaPublica()?.colorPrimario || undefined);
   protected readonly colorSecundario = computed(() => this.marcaPublica()?.colorSecundario || undefined);
   protected readonly nombreEmpresa = computed(() => this.marcaPublica()?.nombreEmpresa || 'LINELCA');
+  // 1=contener (default), 2=cubrir, 3=estirar -- elegido en "Mi marca".
+  protected readonly ajusteLogoCss = computed<'contain' | 'cover' | 'fill'>(() => {
+    switch (this.marcaPublica()?.ajusteLogo) {
+      case 2: return 'cover';
+      case 3: return 'fill';
+      default: return 'contain';
+    }
+  });
 
   protected readonly form = this.fb.nonNullable.group({
     correo: ['', [Validators.required, Validators.email]],

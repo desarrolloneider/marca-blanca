@@ -9,6 +9,9 @@ export interface MarcaDeEmpresa {
   // pagina (clasico/derecha/encabezado) usa esta empresa.
   tipoLogin: number | null;
   tipoPantallaPrincipal: number | null;
+  // 1=contener (no recorta, puede dejar espacio vacio), 2=cubrir (llena la
+  // caja, puede recortar), 3=estirar (llena exacto, puede deformar).
+  ajusteLogo: number | null;
   // Solo lo llena el endpoint publico (login) -- ver MarcaPublicaController.
   nombreEmpresa?: string | null;
 }

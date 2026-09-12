@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { AbstractControl, ReactiveFormsModule, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -10,18 +10,67 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MarcaService } from '../../../../core/identidad-visual/marca.service';
 import { MarcaDeEmpresa } from '../../../../core/identidad-visual/models';
+import { VistaPreviaMarcaService } from '../../../../core/identidad-visual/vista-previa-marca.service';
 import { TemaPaginaService, TemaPagina } from '../../../../core/temas/tema-pagina.service';
 import { PaletaPredefinida, PALETAS_PREDEFINIDAS } from '../../../../shared/brand/paletas-marca';
 
 const FORMATO_HEX = /^#[0-9A-Fa-f]{6}$/;
-// El backend todavia no tiene subida real de logos -- solo guarda una URL
-// (columna VARCHAR(500)). Un data: URL (lo que sale de "elegir archivo" en
-// el navegador) facilmente pasa de varios KB, rompe esa columna, y ademas
-// no es lo que este campo espera semanticamente (una URL, no el archivo).
-function noEsDataUrlValidator(control: AbstractControl): ValidationErrors | null {
-  const valor = control.value as string | null;
-  return valor?.trim().toLowerCase().startsWith('data:') ? { esDataUrl: true } : null;
+const MAX_LOGO_BYTES = 500 * 1024;
+
+// Barra de tono (hue 0-360) -- saturacion/luminosidad quedan fijas en valores
+// vivos para que cualquier punto de la barra de un color usable de una vez,
+// sin necesitar mas controles (el usuario igual puede afinar con el campo
+// hex de al lado si quiere algo mas exacto).
+const SATURACION_TONO = 70;
+const LUMINOSIDAD_TONO = 50;
+
+function tonoAHex(h: number, s: number, l: number): string {
+  s /= 100;
+  l /= 100;
+  const k = (n: number) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const aHex = (x: number) => Math.round(255 * x).toString(16).padStart(2, '0');
+  return `#${aHex(f(0))}${aHex(f(8))}${aHex(f(4))}`;
 }
+
+function hexATono(hex: string | null | undefined): number {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex ?? '');
+  if (!m) {
+    return 0;
+  }
+  const r = parseInt(m[1], 16) / 255;
+  const g = parseInt(m[2], 16) / 255;
+  const b = parseInt(m[3], 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  if (d === 0) {
+    return 0;
+  }
+  let h: number;
+  if (max === r) {
+    h = ((g - b) / d) % 6;
+  } else if (max === g) {
+    h = (b - r) / d + 2;
+  } else {
+    h = (r - g) / d + 4;
+  }
+  h *= 60;
+  return h < 0 ? Math.round(h + 360) : Math.round(h);
+}
+
+interface OpcionAjusteLogo {
+  valor: number;
+  nombre: string;
+  css: 'contain' | 'cover' | 'fill';
+}
+
+const OPCIONES_AJUSTE: OpcionAjusteLogo[] = [
+  { valor: 1, nombre: 'Contener', css: 'contain' },
+  { valor: 2, nombre: 'Cubrir', css: 'cover' },
+  { valor: 3, nombre: 'Estirar', css: 'fill' },
+];
 
 type CodigoTemaLogin = 'lateral' | 'centrado' | 'fondo';
 
@@ -114,17 +163,55 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
 
           <div class="marca-layout">
             <form class="marca-form" [formGroup]="form" (ngSubmit)="guardar()">
+              <div class="logo-field">
+                <span class="campo-label">Logo de tu empresa</span>
+                <div class="logo-row">
+                  @if (form.value.urlLogo) {
+                    <img [src]="form.value.urlLogo" alt="Vista previa del logo" class="logo-preview" [style.object-fit]="ajusteCss()" />
+                  } @else {
+                    <div class="logo-preview logo-preview-vacio">
+                      <mat-icon>image</mat-icon>
+                    </div>
+                  }
+                  <div class="logo-acciones">
+                    <input #inputLogo type="file" accept="image/*" hidden (change)="onLogoSeleccionado($event)" />
+                    <button mat-stroked-button type="button" (click)="inputLogo.click()">
+                      {{ form.value.urlLogo ? 'Cambiar logo' : 'Subir logo' }}
+                    </button>
+                    @if (form.value.urlLogo) {
+                      <button mat-button type="button" (click)="quitarLogo()">Quitar</button>
+                    }
+                  </div>
+                </div>
+                @if (errorLogo()) {
+                  <p class="field-error">{{ errorLogo() }}</p>
+                } @else {
+                  <p class="campo-hint">PNG o JPG, hasta 500 KB. También puedes pegar la URL de una imagen ya publicada.</p>
+                }
+              </div>
+
               <mat-form-field appearance="outline">
-                <mat-label>URL del logo</mat-label>
+                <mat-label>...o pega la URL de una imagen</mat-label>
                 <input matInput formControlName="urlLogo" placeholder="https://mi-empresa.com/logo.png" />
-                <mat-icon matPrefix>image</mat-icon>
+                <mat-icon matPrefix>link</mat-icon>
               </mat-form-field>
-              @if (form.get('urlLogo')?.hasError('esDataUrl')) {
-                <p class="field-error">
-                  Todavía no soportamos subir el archivo directamente: pega la URL de una imagen ya
-                  publicada en internet (ej. la que te da tu servicio de hosting de imágenes), no el
-                  archivo en sí.
-                </p>
+
+              @if (form.value.urlLogo) {
+                <div class="ajuste-field">
+                  <span class="campo-label">Forma del logo</span>
+                  <div class="ajuste-opciones">
+                    @for (opcion of opcionesAjuste; track opcion.valor) {
+                      <button
+                        type="button"
+                        class="ajuste-boton"
+                        [class.ajuste-boton-activo]="form.value.ajusteLogo === opcion.valor"
+                        (click)="form.patchValue({ ajusteLogo: opcion.valor })"
+                      >
+                        {{ opcion.nombre }}
+                      </button>
+                    }
+                  </div>
+                </div>
               }
 
               <div class="paleta-field">
@@ -164,6 +251,16 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
               @if (form.get('colorPrimario')?.invalid && form.get('colorPrimario')?.touched) {
                 <p class="field-error">Formato inválido. Usa un hexadecimal de 6 dígitos, ej: #2563EB</p>
               }
+              <input
+                type="range"
+                class="barra-tono"
+                min="0"
+                max="360"
+                [value]="tonoPrimario()"
+                (pointerdown)="iniciarArrastreTono()"
+                (input)="onTonoPrimario($any($event.target).value)"
+                (change)="animarCambioColor()"
+              />
 
               <div class="color-field">
                 <mat-form-field appearance="outline">
@@ -179,6 +276,16 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
               @if (form.get('colorSecundario')?.invalid && form.get('colorSecundario')?.touched) {
                 <p class="field-error">Formato inválido. Usa un hexadecimal de 6 dígitos, ej: #1E3A5F</p>
               }
+              <input
+                type="range"
+                class="barra-tono"
+                min="0"
+                max="360"
+                [value]="tonoSecundario()"
+                (pointerdown)="iniciarArrastreTono()"
+                (input)="onTonoSecundario($any($event.target).value)"
+                (change)="animarCambioColor()"
+              />
 
               <mat-form-field appearance="outline">
                 <mat-label>Dominio propio</mat-label>
@@ -186,30 +293,44 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
                 <mat-icon matPrefix>public</mat-icon>
               </mat-form-field>
 
-              <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
-                @if (guardando()) {
-                  <mat-spinner diameter="18"></mat-spinner>
-                } @else {
-                  <span>Guardar cambios</span>
-                }
-              </button>
+              <div class="acciones-form">
+                <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+                  @if (guardando()) {
+                    <mat-spinner diameter="18"></mat-spinner>
+                  } @else {
+                    <span>Guardar cambios</span>
+                  }
+                </button>
+                <button mat-button type="button" (click)="restaurarColoresIniciales()">
+                  Volver a los colores iniciales
+                </button>
+              </div>
             </form>
 
-            <aside class="marca-preview" [style.--color-primario]="previewPrimario()" [style.--color-secundario]="previewSecundario()">
+            <aside class="marca-preview">
               <p class="preview-label">Vista previa</p>
               <div class="preview-card">
-                <div class="preview-header">
-                  @if (form.value.urlLogo) {
-                    <img [src]="form.value.urlLogo" alt="Logo de la empresa" (error)="logoConError.set(true)" />
-                  } @else {
-                    <mat-icon>image</mat-icon>
-                  }
+                <div class="preview-capa" [style.background]="gradienteAnterior()"></div>
+                <div
+                  class="preview-capa preview-capa-nueva"
+                  [class.revelada]="revelando()"
+                  [class.sin-transicion]="sinTransicion()"
+                  [style.background]="gradienteActual()"
+                ></div>
+                <div class="preview-contenido">
+                  <div class="preview-header">
+                    @if (form.value.urlLogo) {
+                      <img [src]="form.value.urlLogo" alt="Logo de la empresa" [style.object-fit]="ajusteCss()" (error)="logoConError.set(true)" />
+                    } @else {
+                      <mat-icon>image</mat-icon>
+                    }
+                  </div>
+                  <button class="preview-btn" type="button" [style.color]="previewPrimario()">Botón de ejemplo</button>
+                  <p class="preview-domain">
+                    <mat-icon inline>public</mat-icon>
+                    {{ form.value.dominioPropio || 'app.tu-empresa.com' }}
+                  </p>
                 </div>
-                <button class="preview-btn" type="button">Botón de ejemplo</button>
-                <p class="preview-domain">
-                  <mat-icon inline>public</mat-icon>
-                  {{ form.value.dominioPropio || 'app.tu-empresa.com' }}
-                </p>
               </div>
             </aside>
           </div>
@@ -486,6 +607,77 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
       margin-bottom: 4px;
     }
 
+    .campo-hint {
+      margin: 6px 0 16px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    .logo-field {
+      margin-bottom: 18px;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-preview {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      object-fit: contain;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .logo-preview-vacio {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+    }
+
+    .logo-acciones {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ajuste-field {
+      margin: -4px 0 18px;
+    }
+
+    .ajuste-opciones {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .ajuste-boton {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .ajuste-boton:hover {
+      border-color: #cbd5e1;
+    }
+
+    .ajuste-boton-activo {
+      border-color: #2563eb;
+      color: #2563eb;
+      background: #eff6ff;
+    }
+
     .paleta-field {
       margin-bottom: 18px;
     }
@@ -569,15 +761,55 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
       margin-bottom: 20px;
     }
 
+    /* Barra de tono -- selector libre de color ("a tu gusto"), no solo las
+       paletas predefinidas. Un solo input[type=range] con el track pintado
+       como espectro de matices (hue 0-360); el thumb elige el matiz y S/L
+       quedan fijos en valores vivos para que siempre de un color usable. */
+    .barra-tono {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      margin: -6px 0 16px;
+      background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+      cursor: pointer;
+    }
+    .barra-tono::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #172033;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+      cursor: pointer;
+    }
+    .barra-tono::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #172033;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+      cursor: pointer;
+    }
+
     .field-error {
       margin: -8px 0 8px;
       font-size: 12px;
       color: #dc2626;
     }
 
-    button[type='submit'] {
-      align-self: flex-start;
+    .acciones-form {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin-top: 12px;
+    }
+
+    button[type='submit'] {
       min-width: 160px;
     }
 
@@ -596,13 +828,41 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
     }
 
     .preview-card {
-      background: linear-gradient(135deg, var(--color-secundario, #1e3a5f), var(--color-primario, #2563eb));
+      position: relative;
+      overflow: hidden;
       border-radius: 16px;
+      color: #fff;
+    }
+
+    /* "Wipe" de abajo hacia arriba al cambiar de color: la capa vieja queda
+       de fondo, la capa nueva entra con clip-path (de totalmente tapada por
+       arriba a totalmente visible) -- como el clip tapa desde arriba, al
+       encogerse el area visible crece desde ABAJO hacia arriba. */
+    .preview-capa {
+      position: absolute;
+      inset: 0;
+    }
+
+    .preview-capa-nueva {
+      clip-path: inset(100% 0 0 0);
+      transition: clip-path 0.65s cubic-bezier(.65, 0, .35, 1);
+    }
+
+    .preview-capa-nueva.revelada {
+      clip-path: inset(0 0 0 0);
+    }
+
+    .preview-capa-nueva.sin-transicion {
+      transition: none;
+    }
+
+    .preview-contenido {
+      position: relative;
+      z-index: 1;
       padding: 24px;
       display: flex;
       flex-direction: column;
       gap: 20px;
-      color: #fff;
     }
 
     .preview-header {
@@ -620,12 +880,12 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
     .preview-btn {
       align-self: flex-start;
       background: #fff;
-      color: var(--color-primario, #2563eb);
       border: none;
       border-radius: 8px;
       padding: 10px 18px;
       font-weight: 600;
       cursor: default;
+      transition: color 0.3s ease;
     }
 
     .preview-domain {
@@ -904,15 +1164,17 @@ const OPCIONES_PAGINA: OpcionPagina[] = [
     .preview-pagina-contenido.ancho .preview-pagina-fila { gap: 8px; }
   `],
 })
-export class MiMarcaComponent implements OnInit {
+export class MiMarcaComponent implements OnInit, OnDestroy {
   private readonly marcaService = inject(MarcaService);
   private readonly temaPaginaService = inject(TemaPaginaService);
+  private readonly vistaPreviaMarca = inject(VistaPreviaMarcaService);
   private readonly fb = inject(FormBuilder);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly opcionesLogin = OPCIONES_LOGIN;
   protected readonly opcionesPagina = OPCIONES_PAGINA;
   protected readonly paletasPredefinidas = PALETAS_PREDEFINIDAS;
+  protected readonly opcionesAjuste = OPCIONES_AJUSTE;
 
   protected readonly cargando = signal(true);
   protected readonly guardando = signal(false);
@@ -920,6 +1182,15 @@ export class MiMarcaComponent implements OnInit {
   protected readonly guardandoPagina = signal(false);
   protected readonly errorCarga = signal<string | null>(null);
   protected readonly logoConError = signal(false);
+  protected readonly errorLogo = signal<string | null>(null);
+
+  // Estado del "wipe" animado de la vista previa al cambiar de color -- ver
+  // animarCambioColor(). revelando=true es el estado estable normal (capa
+  // nueva completamente visible); se pone en false momentaneamente para
+  // reproducir la entrada de abajo hacia arriba.
+  protected readonly gradienteAnterior = signal('linear-gradient(135deg, #1e3a5f, #2563eb)');
+  protected readonly revelando = signal(true);
+  protected readonly sinTransicion = signal(false);
 
   protected readonly codigoLoginActivo = signal<CodigoTemaLogin>('lateral');
   protected readonly codigoPaginaActivo = signal<TemaPagina>('clasico');
@@ -927,7 +1198,8 @@ export class MiMarcaComponent implements OnInit {
   private marcaActual: MarcaDeEmpresa | null = null;
 
   protected readonly form = this.fb.nonNullable.group({
-    urlLogo: ['', [noEsDataUrlValidator]],
+    urlLogo: [''],
+    ajusteLogo: [1],
     colorPrimario: ['', [Validators.pattern(FORMATO_HEX)]],
     colorSecundario: ['', [Validators.pattern(FORMATO_HEX)]],
     dominioPropio: [''],
@@ -935,6 +1207,36 @@ export class MiMarcaComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    // El menu real (sidebar/header, ver ShellComponent) se pinta en vivo con
+    // cualquier color que se pruebe aca, incluso antes de guardar -- asi el
+    // usuario ve el efecto en toda la plataforma, no solo en la tarjeta de
+    // "Vista previa" aislada.
+    this.form.get('colorPrimario')!.valueChanges.subscribe(() => this.actualizarVistaPreviaMenu());
+    this.form.get('colorSecundario')!.valueChanges.subscribe(() => this.actualizarVistaPreviaMenu());
+  }
+
+  ngOnDestroy(): void {
+    // Si el usuario se va sin guardar, el menu real vuelve al color
+    // realmente guardado -- no debe quedarse pintado con una prueba que
+    // nunca se confirmo. Si ya guardo (form === marcaActual), se deja la
+    // vista previa puesta: es identica a lo guardado y evita un parpadeo de
+    // vuelta al color viejo mientras el Shell no vuelve a cargar desde el
+    // backend.
+    const v = this.form.getRawValue();
+    const huboEdicionSinGuardar =
+      (v.colorPrimario || null) !== (this.marcaActual?.colorPrimario ?? null) ||
+      (v.colorSecundario || null) !== (this.marcaActual?.colorSecundario ?? null);
+    if (huboEdicionSinGuardar) {
+      this.vistaPreviaMarca.limpiar();
+    }
+  }
+
+  private actualizarVistaPreviaMenu(): void {
+    const v = this.form.getRawValue();
+    this.vistaPreviaMarca.fijar(
+      this.esHexValido(v.colorPrimario) ? v.colorPrimario : null,
+      this.esHexValido(v.colorSecundario) ? v.colorSecundario : null,
+    );
   }
 
   cargar(): void {
@@ -945,6 +1247,7 @@ export class MiMarcaComponent implements OnInit {
         this.marcaActual = marca;
         this.form.patchValue({
           urlLogo: marca.urlLogo ?? '',
+          ajusteLogo: marca.ajusteLogo ?? 1,
           colorPrimario: marca.colorPrimario ?? '',
           colorSecundario: marca.colorSecundario ?? '',
           dominioPropio: marca.dominioPropio ?? '',
@@ -953,6 +1256,10 @@ export class MiMarcaComponent implements OnInit {
         this.codigoLoginActivo.set(opcionLogin?.codigo ?? 'lateral');
         const opcionPagina = OPCIONES_PAGINA.find((o) => o.numero === marca.tipoPantallaPrincipal);
         this.codigoPaginaActivo.set(opcionPagina?.codigo ?? 'clasico');
+        // Sincroniza la capa "anterior" del wipe con el color real recien
+        // cargado -- sin esto, el primer cambio de color animaria desde el
+        // azul de relleno en vez de desde el color que ya tenia la empresa.
+        this.gradienteAnterior.set(this.gradienteActual());
         this.cargando.set(false);
       },
       error: () => {
@@ -960,6 +1267,33 @@ export class MiMarcaComponent implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  onLogoSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    if (!archivo) {
+      return;
+    }
+    if (archivo.size > MAX_LOGO_BYTES) {
+      this.errorLogo.set('El logo pesa demasiado (máximo 500 KB).');
+      input.value = '';
+      return;
+    }
+    this.errorLogo.set(null);
+    const lector = new FileReader();
+    lector.onload = () => this.form.patchValue({ urlLogo: lector.result as string });
+    lector.readAsDataURL(archivo);
+  }
+
+  quitarLogo(): void {
+    this.form.patchValue({ urlLogo: '' });
+    this.errorLogo.set(null);
+  }
+
+  protected ajusteCss(): 'contain' | 'cover' | 'fill' {
+    const valor = this.form.value.ajusteLogo;
+    return OPCIONES_AJUSTE.find((o) => o.valor === valor)?.css ?? 'contain';
   }
 
   guardar(): void {
@@ -977,6 +1311,7 @@ export class MiMarcaComponent implements OnInit {
       // null = "no tocar" (el backend conserva el valor que ya tenia guardado).
       tipoLogin: this.marcaActual?.tipoLogin ?? null,
       tipoPantallaPrincipal: this.marcaActual?.tipoPantallaPrincipal ?? null,
+      ajusteLogo: valores.ajusteLogo || null,
     };
 
     this.guardando.set(true);
@@ -1002,6 +1337,7 @@ export class MiMarcaComponent implements OnInit {
       dominioPropio: this.marcaActual?.dominioPropio ?? null,
       tipoLogin: opcion.numero,
       tipoPantallaPrincipal: this.marcaActual?.tipoPantallaPrincipal ?? null,
+      ajusteLogo: this.marcaActual?.ajusteLogo ?? null,
     };
     this.marcaService.actualizar(marca).subscribe({
       next: () => {
@@ -1026,6 +1362,7 @@ export class MiMarcaComponent implements OnInit {
       dominioPropio: this.marcaActual?.dominioPropio ?? null,
       tipoLogin: this.marcaActual?.tipoLogin ?? null,
       tipoPantallaPrincipal: opcion.numero,
+      ajusteLogo: this.marcaActual?.ajusteLogo ?? null,
     };
     this.marcaService.actualizar(marca).subscribe({
       next: () => {
@@ -1046,7 +1383,49 @@ export class MiMarcaComponent implements OnInit {
   }
 
   elegirPaleta(paleta: PaletaPredefinida): void {
+    this.gradienteAnterior.set(this.gradienteActual());
     this.form.patchValue({ colorPrimario: paleta.primario, colorSecundario: paleta.secundario });
+    this.animarCambioColor();
+  }
+
+  // Se llama al soltar la barra de tono (pointerdown captura el color de
+  // "antes" para que el wipe tenga de donde partir; mientras se arrastra,
+  // el color cambia en vivo sin animacion -- reanimar en cada pixel se veria
+  // entrecortado, no fluido).
+  protected iniciarArrastreTono(): void {
+    this.gradienteAnterior.set(this.gradienteActual());
+  }
+
+  protected tonoPrimario(): number {
+    return hexATono(this.form.value.colorPrimario);
+  }
+
+  protected tonoSecundario(): number {
+    return hexATono(this.form.value.colorSecundario);
+  }
+
+  protected onTonoPrimario(valor: string): void {
+    this.form.patchValue({ colorPrimario: tonoAHex(Number(valor), SATURACION_TONO, LUMINOSIDAD_TONO) });
+  }
+
+  protected onTonoSecundario(valor: string): void {
+    this.form.patchValue({ colorSecundario: tonoAHex(Number(valor), SATURACION_TONO, LUMINOSIDAD_TONO) });
+  }
+
+  // "Wipe" de abajo hacia arriba: oculta la capa nueva SIN transicion
+  // (sinTransicion evita que el ocultamiento en si se anime), espera 2
+  // frames para que el navegador confirme ese estado, y recien ahi reactiva
+  // la transicion y revela -- de lo contrario el clip-path "rebota" en vez
+  // de entrar limpio.
+  protected animarCambioColor(): void {
+    this.sinTransicion.set(true);
+    this.revelando.set(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.sinTransicion.set(false);
+        this.revelando.set(true);
+      });
+    });
   }
 
   protected esHexValido(valor: string | null | undefined): boolean {
@@ -1061,5 +1440,22 @@ export class MiMarcaComponent implements OnInit {
   protected previewSecundario(): string {
     const valor = this.form.value.colorSecundario;
     return this.esHexValido(valor) ? (valor as string) : '#1e3a5f';
+  }
+
+  protected gradienteActual(): string {
+    return `linear-gradient(135deg, ${this.previewSecundario()}, ${this.previewPrimario()})`;
+  }
+
+  // "Volver a los colores iniciales": deshace los cambios sin guardar de
+  // esta visita a la pantalla, volviendo a lo que ya estaba guardado (no al
+  // azul de la plataforma) -- con el mismo wipe animado que el resto de
+  // cambios de color, para que se sienta consistente.
+  protected restaurarColoresIniciales(): void {
+    this.gradienteAnterior.set(this.gradienteActual());
+    this.form.patchValue({
+      colorPrimario: this.marcaActual?.colorPrimario ?? '',
+      colorSecundario: this.marcaActual?.colorSecundario ?? '',
+    });
+    this.animarCambioColor();
   }
 }

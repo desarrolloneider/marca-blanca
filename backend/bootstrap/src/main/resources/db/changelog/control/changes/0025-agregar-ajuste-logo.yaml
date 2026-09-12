@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0025-agregar-ajuste-logo
+      author: claude
+      comment: Como se ajusta el logo dentro de su caja (1=contener, 2=cubrir, 3=estirar) -- self-service desde "Mi marca", mismo patron que tipo_login/tipo_pantalla_principal.
+      changes:
+        - addColumn:
+            schemaName: plataforma
+            tableName: tbl_empresas_marca
+            columns:
+              - column:
+                  name: ajuste_logo
+                  type: SMALLINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: >
+              ALTER TABLE plataforma.tbl_empresas_marca
+              ADD CONSTRAINT ck_empresas_marca_ajuste_logo CHECK (ajuste_logo BETWEEN 1 AND 3)
+      rollback:
+        - dropColumn: {schemaName: plataforma, tableName: tbl_empresas_marca, columnName: ajuste_logo}

@@ -47,6 +47,12 @@ class EmpresaMarcaEntity {
     @Column(name = "tipo_pantalla_principal", nullable = false)
     private Short tipoPantallaPrincipal;
 
+    // 1=contener (no recorta, puede dejar espacio vacio), 2=cubrir (llena la
+    // caja, puede recortar), 3=estirar (llena exacto, puede deformar). Ver
+    // 0025-agregar-ajuste-logo.yaml.
+    @Column(name = "ajuste_logo", nullable = false)
+    private Short ajusteLogo;
+
     @Column(name = "creado_en", nullable = false)
     private OffsetDateTime creadoEn;
 
@@ -58,7 +64,7 @@ class EmpresaMarcaEntity {
     }
 
     EmpresaMarcaEntity(Long empresaId, String urlLogo, String colorPrimario, String colorSecundario,
-                        String dominioPropio, Integer tipoLogin, Integer tipoPantallaPrincipal) {
+                        String dominioPropio, Integer tipoLogin, Integer tipoPantallaPrincipal, Integer ajusteLogo) {
         this.uuid = UUID.randomUUID();
         this.empresaId = empresaId;
         this.urlLogo = urlLogo;
@@ -67,18 +73,20 @@ class EmpresaMarcaEntity {
         this.dominioPropio = dominioPropio;
         this.tipoLogin = aCorto(tipoLogin, (short) 1);
         this.tipoPantallaPrincipal = aCorto(tipoPantallaPrincipal, (short) 1);
+        this.ajusteLogo = aCorto(ajusteLogo, (short) 1);
         this.creadoEn = OffsetDateTime.now();
         this.actualizadoEn = OffsetDateTime.now();
     }
 
     void actualizar(String urlLogo, String colorPrimario, String colorSecundario, String dominioPropio,
-                     Integer tipoLogin, Integer tipoPantallaPrincipal) {
+                     Integer tipoLogin, Integer tipoPantallaPrincipal, Integer ajusteLogo) {
         this.urlLogo = urlLogo;
         this.colorPrimario = colorPrimario;
         this.colorSecundario = colorSecundario;
         this.dominioPropio = dominioPropio;
         this.tipoLogin = aCorto(tipoLogin, this.tipoLogin);
         this.tipoPantallaPrincipal = aCorto(tipoPantallaPrincipal, this.tipoPantallaPrincipal);
+        this.ajusteLogo = aCorto(ajusteLogo, this.ajusteLogo);
         this.actualizadoEn = OffsetDateTime.now();
     }
 
@@ -104,6 +112,10 @@ class EmpresaMarcaEntity {
 
     Integer getTipoPantallaPrincipal() {
         return tipoPantallaPrincipal != null ? tipoPantallaPrincipal.intValue() : null;
+    }
+
+    Integer getAjusteLogo() {
+        return ajusteLogo != null ? ajusteLogo.intValue() : null;
     }
 
     String getDominioPropio() {
