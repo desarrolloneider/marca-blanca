@@ -72,6 +72,13 @@ jobs:
 
   publish-frontend:
     name: Publicar imagen del frontend
+    # Depende de que publish-backend haya terminado bien: si no, este job
+    # ni siquiera arranca. Antes corrian en paralelo sin depender uno del
+    # otro -- si fallaba backend, frontend igual corria completo en
+    # ubuntu-latest (el unico runner que todavia cuesta minutos) y se
+    # gastaban minutos sobre un push que de todas formas no iba a
+    # desplegarse (deploy-dev tambien necesita que los dos publiquen bien).
+    needs: publish-backend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
