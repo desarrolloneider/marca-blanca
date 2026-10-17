@@ -229,7 +229,7 @@ function temaVisualDesdeCodigo(codigo: number | null | undefined): TemaVisual {
                   <span>LINELCA</span>
                 </div>
 
-                <h1>Gestiona tu empresa desde un solo lugar</h1>
+                <h1>Gestiona tu empresa desde un solo lugar 🚀 (CD funcionando)</h1>
                 <p class="brand-tagline">
                   Usuarios, módulos y comunicación omnicanal en una sola plataforma.
                 </p>
