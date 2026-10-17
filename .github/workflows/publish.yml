@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # El driver "docker" por defecto no soporta exportar cache hacia GitHub
       # Actions (cache-to: type=gha) -- falla con "Cache export is not
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # El driver "docker" por defecto no soporta exportar cache hacia GitHub
       # Actions (cache-to: type=gha) -- falla con "Cache export is not
@@ -172,7 +172,7 @@ jobs:
     runs-on: [self-hosted, dev-vm]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Login en GHCR (en la VM)
         run: |
