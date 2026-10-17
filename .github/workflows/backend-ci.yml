@@ -10,9 +10,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main, develop]
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend-ci.yml"
 
 permissions:
   contents: read
@@ -26,8 +23,36 @@ defaults:
     working-directory: backend
 
 jobs:
+  # Sin filtro de "paths" a nivel de disparo: Build & test (Java 25) y
+  # SonarQube analysis estan marcados como checks obligatorios en la regla
+  # de proteccion de main/develop. Si el workflow solo disparara cuando
+  # cambia backend/**, un PR que toca unicamente el frontend nunca genera
+  # ese check -- y un check obligatorio que nunca corre deja el PR
+  # bloqueado para siempre (GitHub se queda esperando un resultado que
+  # jamas llega). En vez de eso, el workflow siempre corre, y este job
+  # detecta si de verdad cambio algo de backend; si no, los jobs de abajo
+  # se marcan "skipped", que para un check obligatorio cuenta como exito.
+  cambios:
+    name: Detectar cambios
+    runs-on: [self-hosted, dev-vm]
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detectar si cambio backend/**
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/backend-ci.yml'
+
   build-test:
     name: Build & test (Java 25)
+    needs: cambios
+    if: needs.cambios.outputs.backend == 'true'
     # dev-vm en vez de ubuntu-latest: este job corria en cada push/PR y
     # consumia los minutos facturables del plan. En dev-vm es gratis (es
     # infraestructura propia). Mismo patron que el job de Sonar: el runner
@@ -62,12 +87,12 @@ jobs:
 
   sonar:
     name: SonarQube analysis
-    needs: build-test
+    needs: [cambios, build-test]
     # Corre en el runner self-hosted porque SonarQube vive en la red interna
     # de la VM de dev (10.104.0.11), solo alcanzable desde ahí.
     # Nunca corre para PRs de forks externos: evita ejecutar código
     # no confiable en el runner self-hosted.
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+    if: needs.cambios.outputs.backend == 'true' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: [self-hosted, dev-vm]
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
