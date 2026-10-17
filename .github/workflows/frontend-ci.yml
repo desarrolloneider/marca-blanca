@@ -90,8 +90,17 @@ jobs:
           sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
             -v "${{ github.workspace }}:/workspace" -w /workspace/frontend \
             -e SONAR_HOST_URL="$SONAR_HOST_URL" -e SONAR_TOKEN="$SONAR_TOKEN" \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
             node:24-bookworm bash -s <<'SCRIPT'
           set -e
+          # Todo dentro del contenedor corre como root (hace falta para el
+          # apt-get del Chromium). Sin esto, node_modules/dist/etc. quedan
+          # con dueño root en el workspace compartido del runner, y el
+          # siguiente checkout -- que corre como el usuario real de la VM,
+          # no root -- no los puede borrar ni sobreescribir (EACCES:
+          # permission denied). trap asegura que se ejecute incluso si el
+          # build falla.
+          trap 'chown -R "$HOST_UID:$HOST_GID" /workspace' EXIT
           corepack enable
           corepack prepare pnpm@10 --activate
           apt-get update -qq

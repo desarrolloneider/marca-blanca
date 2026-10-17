@@ -82,8 +82,17 @@ jobs:
           sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
             -v "${{ github.workspace }}:/workspace" -w /workspace/backend \
             -e SONAR_HOST_URL="$SONAR_HOST_URL" -e SONAR_TOKEN="$SONAR_TOKEN" \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
             eclipse-temurin:25 bash -s <<'SCRIPT'
           set -e
+          # Todo dentro del contenedor corre como root (hace falta para el
+          # apt-get). Sin esto, los archivos que Maven genera (target/,
+          # .m2/) quedan con dueño root en el workspace compartido del
+          # runner, y el siguiente checkout -- que corre como el usuario
+          # real de la VM, no root -- no los puede borrar ni sobreescribir
+          # (EACCES: permission denied). trap asegura que se ejecute incluso
+          # si el build falla.
+          trap 'chown -R "$HOST_UID:$HOST_GID" /workspace' EXIT
           apt-get update -qq
           apt-get install -y -qq maven
           mvn -B -ntp clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
