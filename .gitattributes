@@ -1,0 +1,5 @@
+# Los scripts de shell corren en Linux (VM de dev, contenedores) -- si
+# Git los guarda con CRLF (comun al clonar en Windows), bash los rechaza
+# con "bad interpreter" por el \r despues del shebang. Forzar LF siempre,
+# sin importar el core.autocrlf de quien los edite.
+*.sh text eol=lf
