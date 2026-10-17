@@ -39,7 +39,11 @@ for line in "${PORT_LINES[@]}"; do
   [ -n "$line" ] && PORT_ARGS+=(-p "$line")
 done
 
-mapfile -t NETWORKS < <($WRAPPER inspect "$NAME" --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}')
+mapfile -t RAW_NETWORKS < <($WRAPPER inspect "$NAME" --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}')
+NETWORKS=()
+for net in "${RAW_NETWORKS[@]}"; do
+  [ -n "$net" ] && NETWORKS+=("$net")
+done
 if [ "${#NETWORKS[@]}" -eq 0 ]; then
   echo "El contenedor '$NAME' no esta en ninguna red -- eso no deberia pasar. Abortando." >&2
   exit 1
