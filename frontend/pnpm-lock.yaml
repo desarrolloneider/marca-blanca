@@ -45,8 +45,8 @@ importers:
         specifier: ^3.15.0
         version: 3.15.0
       ng2-charts:
-        specifier: ^10.0.0
-        version: 10.0.0(f73f63206353f8c64433ae5b5449d68c)
+        specifier: ^11.0.0
+        version: 11.0.0(f73f63206353f8c64433ae5b5449d68c)
       rxjs:
         specifier: ~7.8.0
         version: 7.8.2
@@ -3600,13 +3600,13 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  ng2-charts@10.0.0:
-    resolution: {integrity: sha512-mdL75XJrk/0s0YO2ySPQpAHPja85ECDEGNWFlcElJiy/bYliTNGEpeCtctAqZuozTff/E2CwGjyfPFM1ScP2og==}
+  ng2-charts@11.0.0:
+    resolution: {integrity: sha512-KHFPsGSyHtluWuvyIhWQVFNWqeQJ25Jy69XajEiAuAXknc3OM9VY45hu7vwv9p51osg+E5GnPxVdPQ3c08L9KA==}
     peerDependencies:
-      '@angular/cdk': '>=21.0.0'
-      '@angular/common': '>=21.0.0'
-      '@angular/core': '>=21.0.0'
-      '@angular/platform-browser': '>=21.0.0'
+      '@angular/cdk': '>=22.0.0'
+      '@angular/common': '>=22.0.0'
+      '@angular/core': '>=22.0.0'
+      '@angular/platform-browser': '>=22.0.0'
       chart.js: ^3.4.0 || ^4.0.0
       rxjs: ^6.5.3 || ^7.4.0
 
@@ -8064,7 +8064,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  ng2-charts@10.0.0(f73f63206353f8c64433ae5b5449d68c):
+  ng2-charts@11.0.0(f73f63206353f8c64433ae5b5449d68c):
     dependencies:
       '@angular/cdk': 22.1.4(@angular/common@22.1.4(@angular/core@22.1.4(@angular/compiler@22.1.4)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@22.1.4(@angular/compiler@22.1.4)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@22.1.4(@angular/animations@22.1.4(@angular/core@22.1.4(@angular/compiler@22.1.4)(rxjs@7.8.2)(zone.js@0.15.1)))(@angular/common@22.1.4(@angular/core@22.1.4(@angular/compiler@22.1.4)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@22.1.4(@angular/compiler@22.1.4)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
       '@angular/common': 22.1.4(@angular/core@22.1.4(@angular/compiler@22.1.4)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
