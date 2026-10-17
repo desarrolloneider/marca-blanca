@@ -41,7 +41,7 @@ jobs:
       # Actions (cache-to: type=gha) -- falla con "Cache export is not
       # supported for the docker driver". El driver "docker-container" si.
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login en GHCR
         uses: docker/login-action@v3
@@ -111,7 +111,7 @@ jobs:
       # Actions (cache-to: type=gha) -- falla con "Cache export is not
       # supported for the docker driver". El driver "docker-container" si.
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login en GHCR
         uses: docker/login-action@v3
