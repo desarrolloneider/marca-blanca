@@ -4,12 +4,21 @@ updates:
   # Dependencias Java (pom.xml padre + todos los modulos del reactor:
   # shared-kernel, usuarios-*, omnicanal-*, bootstrap, etc. -- Dependabot
   # los detecta solos a partir del pom.xml raiz).
+  #
+  # Agrupadas en un solo PR semanal en vez de uno por libreria: la primera
+  # corrida abrio 17 PRs de una vez, y como solo hay un runner self-hosted
+  # (dev-vm), se formo una fila larga de jobs esperando turno. Un PR por
+  # ecosistema por semana es mucho mas facil de revisar y no satura el
+  # runner.
   - package-ecosystem: maven
     directory: /backend
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
     labels: [dependencies, backend]
+    groups:
+      backend-dependencies:
+        patterns: ["*"]
 
   # Dependencias de Node/Angular (pnpm-lock.yaml).
   - package-ecosystem: npm
@@ -18,6 +27,9 @@ updates:
       interval: weekly
     open-pull-requests-limit: 10
     labels: [dependencies, frontend]
+    groups:
+      frontend-dependencies:
+        patterns: ["*"]
 
   # Imagenes base de los Dockerfile (eclipse-temurin, nginx, etc.).
   - package-ecosystem: docker
@@ -25,12 +37,18 @@ updates:
     schedule:
       interval: weekly
     labels: [dependencies, docker]
+    groups:
+      docker-images:
+        patterns: ["*"]
 
   - package-ecosystem: docker
     directory: /frontend
     schedule:
       interval: weekly
     labels: [dependencies, docker]
+    groups:
+      docker-images:
+        patterns: ["*"]
 
   # Versiones de las actions usadas en los workflows (actions/checkout@v4,
   # docker/build-push-action@v6, etc.).
@@ -39,3 +57,6 @@ updates:
     schedule:
       interval: weekly
     labels: [dependencies, ci]
+    groups:
+      github-actions:
+        patterns: ["*"]
