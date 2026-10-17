@@ -27,20 +27,28 @@ defaults:
 jobs:
   build-test:
     name: Build & test (Java 25)
-    runs-on: ubuntu-latest
+    # dev-vm en vez de ubuntu-latest: este job corria en cada push/PR y
+    # consumia los minutos facturables del plan. En dev-vm es gratis (es
+    # infraestructura propia). Mismo patron que el job de Sonar: el runner
+    # no tiene Maven ni acceso directo al socket de Docker, asi que se
+    # orquesta el contenedor a mano via el wrapper con sudo.
+    runs-on: [self-hosted, dev-vm]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "25"
-          cache: maven
-
-      - name: Build & test
-        run: mvn -B -ntp clean verify
+      - name: Build & test (en contenedor)
+        run: |
+          sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
+            -v "${{ github.workspace }}:/workspace" -w /workspace/backend \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+            eclipse-temurin:25 bash -s <<'SCRIPT'
+          set -e
+          trap 'chown -R "$HOST_UID:$HOST_GID" /workspace' EXIT
+          apt-get update -qq
+          apt-get install -y -qq maven
+          mvn -B -ntp clean verify
+          SCRIPT
 
       - name: Publish test report
         if: always()

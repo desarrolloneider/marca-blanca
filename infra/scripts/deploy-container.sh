@@ -11,7 +11,7 @@
 # Ejemplo: deploy-container.sh backend ghcr.io/desarrolloneider/marca-blanca-backend:dev
 #
 # Requiere el wrapper de docker con sudo NOPASSWD (ver infra/docker/sonarqube
-# y las notas de CI): pull, inspect, stop, rm, run, network connect.
+# y las notas de CI): pull, inspect, stop, rm, create, start, network connect.
 set -euo pipefail
 
 WRAPPER="sudo /usr/local/bin/docker-rbac/devops-wrapper"
@@ -30,7 +30,7 @@ echo "==> Leyendo configuracion actual de '$NAME' (env, redes, puertos)"
 mapfile -t ENV_LINES < <($WRAPPER inspect "$NAME" --format '{{range .Config.Env}}{{println .}}{{end}}')
 ENV_ARGS=()
 for line in "${ENV_LINES[@]}"; do
-  ENV_ARGS+=(-e "$line")
+  [ -n "$line" ] && ENV_ARGS+=(-e "$line")
 done
 
 mapfile -t PORT_LINES < <($WRAPPER inspect "$NAME" --format '{{range $p, $conf := .HostConfig.PortBindings}}{{range $conf}}{{.HostPort}}:{{$p}}{{println}}{{end}}{{end}}' | sed 's#/tcp$##')
@@ -50,12 +50,21 @@ echo "==> Deteniendo y quitando el contenedor viejo"
 $WRAPPER stop "$NAME"
 $WRAPPER rm "$NAME"
 
-echo "==> Levantando '$NAME' con la imagen nueva en la red '$FIRST_NET'"
-$WRAPPER run -d --name "$NAME" --network "$FIRST_NET" "${ENV_ARGS[@]}" "${PORT_ARGS[@]}" "$IMAGE"
+# Importante: se crea con "create" (no arranca todavia) y se conecta a
+# TODAS sus redes antes de "start". Si se usara "run" (crea y arranca de
+# una), la app intenta resolver nombres como "postgres" o "redis" apenas
+# arranca -- antes de que alcance a conectarse a las redes que no sean la
+# primera -- y se cae con UnknownHostException. Paso en caliente el 17 de
+# octubre: el backend quedo caido varios minutos en dev por esto mismo.
+echo "==> Creando '$NAME' con la imagen nueva (sin arrancar todavia)"
+$WRAPPER create --name "$NAME" --network "$FIRST_NET" "${ENV_ARGS[@]}" "${PORT_ARGS[@]}" "$IMAGE"
 
 for net in "${NETWORKS[@]:1}"; do
-  echo "==> Conectando tambien a la red '$net'"
+  echo "==> Conectando tambien a la red '$net' (antes de arrancar)"
   $WRAPPER network connect "$net" "$NAME"
 done
+
+echo "==> Arrancando '$NAME', ya conectado a todas sus redes"
+$WRAPPER start "$NAME"
 
 echo "==> Listo: '$NAME' quedo corriendo con $IMAGE"

@@ -27,28 +27,29 @@ defaults:
 jobs:
   build:
     name: Install & build
-    runs-on: ubuntu-latest
+    # dev-vm en vez de ubuntu-latest: este job corria en cada push/PR y
+    # consumia los minutos facturables del plan. En dev-vm es gratis (es
+    # infraestructura propia). Mismo patron que el job de Sonar: el runner
+    # no tiene Node/pnpm ni acceso directo al socket de Docker, asi que se
+    # orquesta el contenedor a mano via el wrapper con sudo.
+    runs-on: [self-hosted, dev-vm]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build (production)
-        run: pnpm exec ng build --configuration production
+      - name: Install & build (en contenedor)
+        run: |
+          sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
+            -v "${{ github.workspace }}:/workspace" -w /workspace/frontend \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+            node:24-bookworm bash -s <<'SCRIPT'
+          set -e
+          trap 'chown -R "$HOST_UID:$HOST_GID" /workspace' EXIT
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm install --frozen-lockfile
+          pnpm exec ng build --configuration production
+          SCRIPT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
