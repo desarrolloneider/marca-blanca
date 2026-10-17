@@ -85,6 +85,11 @@ jobs:
       # sirve aquí: el propio runner no puede hablarle al daemon). Sí existe
       # un wrapper con sudo NOPASSWD que permite "docker run" con volúmenes,
       # así que el contenedor se orquesta a mano a través de él.
+      # -Dsonar.qualitygate.wait=true: sin esto, mvn sonar:sonar manda el
+      # analisis y sigue sin importar el resultado -- el Quality Gate no
+      # bloqueaba nada, solo quedaba como dato en el dashboard. Con esto el
+      # paso espera la respuesta de SonarQube y falla si el gate queda en
+      # rojo (una de las 5 puertas del CLAUDE.md antes de fusionar).
       - name: Build, test & analyze (en contenedor)
         if: ${{ vars.SONAR_HOST_URL != '' }}
         run: |
@@ -105,5 +110,6 @@ jobs:
           apt-get update -qq
           apt-get install -y -qq maven
           mvn -B -ntp clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.host.url="$SONAR_HOST_URL" -Dsonar.token="$SONAR_TOKEN"
+            -Dsonar.host.url="$SONAR_HOST_URL" -Dsonar.token="$SONAR_TOKEN" \
+            -Dsonar.qualitygate.wait=true
           SCRIPT
