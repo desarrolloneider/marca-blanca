@@ -24,3 +24,23 @@ npm-debug.log*
 infra/terraform/.terraform/
 infra/terraform/*.tfstate
 infra/terraform/*.tfstate.backup
+
+# ============================================================
+# GUAJIRANET MOBILE - ROOT
+# ============================================================
+
+mobile/.dart_tool/
+mobile/build/
+mobile/.build/
+mobile/.idea/
+mobile/*.iml
+
+mobile/android/.gradle/
+mobile/android/local.properties
+
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/ephemeral/
+mobile/ios/Flutter/.last_build_id
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Flutter/flutter_export_environment.sh
