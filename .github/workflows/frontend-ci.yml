@@ -1,11 +1,12 @@
 name: Frontend CI
 
+# Solo corre en el PR, no otra vez al mergear a main/develop -- si el PR
+# ya paso build+test+Sonar con ese codigo exacto, repetirlo en el merge es
+# trabajo duplicado, no una verificacion adicional real. Un push directo a
+# develop/main (sin pasar por PR) no dispara este workflow; branch-policy.yml
+# no lo bloquea tecnicamente, es una decision de confiar en que casi todo
+# el equipo pasa por PR.
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-ci.yml"
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main, develop]
