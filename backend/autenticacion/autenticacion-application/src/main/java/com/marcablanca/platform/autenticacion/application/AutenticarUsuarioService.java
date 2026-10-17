@@ -43,7 +43,7 @@ public class AutenticarUsuarioService implements AutenticarUsuario {
         DatosDeUsuario usuario = verificadorDeUsuarios.verificarCredenciales(correoTexto, contrasenaPlano);
 
         String identificadorEmpresa = ContextoEmpresaActual.obtener()
-                .orElseThrow(() -> new IllegalStateException("No hay empresa activa en el contexto de la peticion"));
+                .orElseThrow(() -> new IllegalStateException("No hay empresa activa en la peticion                                                           "));
 
         Set<String> permisos = consultarPermisosDeUsuario.permisosDe(usuario.id());
         String token = generadorDeToken.generarPara(usuario, permisos, identificadorEmpresa);

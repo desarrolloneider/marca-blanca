@@ -152,7 +152,7 @@ const ITEMS_NAV: ItemNav[] = [
       border-radius:9px; padding:11px 12px; font-size:13px; overflow: hidden; isolation: isolate;
       transition: background .18s ease,color .18s ease,transform .18s ease;
     }
-    .sidebar-nav a mat-icon { width:19px; height:19px; font-size:19px; }
+    .sidebar-nav a mat-icon { width:19px; height:19px; font-size:19px; transition: transform .28s cubic-bezier(.34,1.56,.64,1); }
     /* Spotlight que sigue al mouse (onSpotlight() actualiza --x/--y) -- mismo
        recurso visual que las tarjetas con "glow" de uiable.com, aplicado al
        link en vez de a toda la pagina. */
@@ -161,12 +161,13 @@ const ITEMS_NAV: ItemNav[] = [
       background: radial-gradient(180px circle at var(--x, 50%) var(--y, 50%), rgba(120,180,255,0.65), rgba(120,180,255,0.15) 45%, transparent 70%);
       transition: opacity .2s ease;
     }
-    .sidebar-nav a:hover { background:rgba(255,255,255,.08); color:#fff; transform:translateX(2px); }
+    .sidebar-nav a:hover { background:rgba(255,255,255,.08); color:#fff; transform:translateX(5px); }
     .sidebar-nav a:hover::before { opacity: 1; }
+    .sidebar-nav a:hover mat-icon { transform: scale(1.18) rotate(-8deg); }
     .sidebar-nav a.active { background: var(--marca-acento, #2468d9); color:#fff; box-shadow:0 6px 16px rgba(0,0,0,.25); }
     .sidebar-nav a.active::before { display: none; }
     .sidebar-help { margin-top:auto; display:flex; gap:10px; align-items:center; border-top:1px solid rgba(255,255,255,.1); padding:18px 8px; color:#9daac0; }.sidebar-help mat-icon { color:#6ea7ff; }.sidebar-help strong,.sidebar-help span { display:block; }.sidebar-help strong { color:#d7deeb; font-size:12px; }.sidebar-help span { font-size:11px; margin-top:3px; }.logout-button { display:flex; align-items:center; gap:11px; border:0; border-top:1px solid rgba(255,255,255,.1); padding:15px 10px 0; margin:0; background:none; color:#9daac0; cursor:pointer; font:inherit; font-size:13px; text-align:left; }.logout-button:hover { color:#fff; }.logout-button mat-icon { font-size:19px; }
-    .main-shell { flex:1; min-width:0; }.topbar { height:72px; box-sizing:border-box; background:#fff; border-bottom:1px solid #e6eaf1; display:flex; align-items:center; justify-content:space-between; padding:0 34px; }.breadcrumb { display:flex; align-items:center; gap:7px; color:#8b97aa; font-size:13px; }.breadcrumb mat-icon { width:17px; height:17px; font-size:17px; }.breadcrumb strong { color:#26334a; font-weight:600; }.topbar-actions { display:flex; align-items:center; gap:18px; }.topbar-actions button { position:relative; color:#66748a; }.notification-dot { position:absolute; top:8px; right:8px; width:6px; height:6px; border-radius:50%; background:#ef6b5f; border:2px solid white; }.profile { display:flex; align-items:center; gap:9px; }.avatar { width:34px; height:34px; border-radius:10px; background:#e6efff; color: var(--marca-acento, #2468d9); display:grid; place-items:center; font-size:12px; font-weight:800; }.profile strong,.profile span { display:block; }.profile strong { font-size:12px; color:#27344a; }.profile span { font-size:11px; color:#8b97aa; margin-top:2px; }.profile > mat-icon { color:#8b97aa; font-size:18px; }.page-content { padding: 30px 34px 48px; max-width: 1500px; margin:0 auto; box-sizing:border-box; }
+    .main-shell { flex:1; min-width:0; }.topbar { height:72px; box-sizing:border-box; background:#fff; border-bottom:1px solid #e6eaf1; display:flex; align-items:center; justify-content:space-between; padding:0 34px; position:sticky; top:0; z-index:10; }.breadcrumb { display:flex; align-items:center; gap:7px; color:#8b97aa; font-size:13px; }.breadcrumb mat-icon { width:17px; height:17px; font-size:17px; }.breadcrumb strong { color:#26334a; font-weight:600; }.topbar-actions { display:flex; align-items:center; gap:18px; }.topbar-actions button { position:relative; color:#66748a; }.notification-dot { position:absolute; top:8px; right:8px; width:6px; height:6px; border-radius:50%; background:#ef6b5f; border:2px solid white; }.profile { display:flex; align-items:center; gap:9px; }.avatar { width:34px; height:34px; border-radius:10px; background:#e6efff; color: var(--marca-acento, #2468d9); display:grid; place-items:center; font-size:12px; font-weight:800; }.profile strong,.profile span { display:block; }.profile strong { font-size:12px; color:#27344a; }.profile span { font-size:11px; color:#8b97aa; margin-top:2px; }.profile > mat-icon { color:#8b97aa; font-size:18px; }.page-content { padding: 30px 34px 48px; max-width: 1500px; margin:0 auto; box-sizing:border-box; }
     /* "A la derecha": mismo sidebar, solo se invierte el orden del flex --
        el contenido queda a la izquierda y la barra de navegacion a la derecha. */
     .app-shell.tema-derecha { flex-direction: row-reverse; }
@@ -188,13 +189,23 @@ const ITEMS_NAV: ItemNav[] = [
     .brand-mini small { font-size: 10px; color: #8492aa; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .topnav { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; }
     .topnav a {
-      display: flex; align-items: center; gap: 8px; color: #9daac0; text-decoration: none;
+      position: relative; display: flex; align-items: center; gap: 8px; color: #9daac0; text-decoration: none;
       border-radius: 9px; padding: 9px 14px; font-size: 13px; white-space: nowrap;
       transition: background .18s ease, color .18s ease;
     }
-    .topnav a mat-icon { width: 18px; height: 18px; font-size: 18px; }
-    .topnav a:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .topnav a mat-icon { width: 18px; height: 18px; font-size: 18px; transition: transform .28s cubic-bezier(.34,1.56,.64,1); }
+    /* Subrayado que crece desde el centro -- animacion distinta a la del
+       sidebar (que usa spotlight + desplazamiento), para que cada layout
+       se sienta con su propio caracter. */
+    .topnav a::after {
+      content: ''; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px; border-radius: 2px;
+      background: var(--marca-acento, #79b4ff); transform: scaleX(0); transition: transform .22s ease;
+    }
+    .topnav a:hover { color: #fff; }
+    .topnav a:hover mat-icon { transform: translateY(-2px); }
+    .topnav a:hover::after { transform: scaleX(1); }
     .topnav a.active { background: var(--marca-acento, #2468d9); color: #fff; }
+    .topnav a.active::after { display: none; }
     .topbar-full .topbar-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
     .topbar-full .topbar-actions button { color: #9daac0; }
     .topbar-full .profile { display: flex; align-items: center; gap: 9px; }
