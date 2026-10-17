@@ -60,11 +60,6 @@ jobs:
     # no confiable en el runner self-hosted.
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: [self-hosted, dev-vm]
-    # Corre dentro de un contenedor Maven+JDK 25: el runner (dev-vm) no tiene
-    # Maven instalado y el usuario del sistema no tiene permisos para
-    # instalarlo. Dentro del contenedor no hace falta ese permiso.
-    container:
-      image: maven:3.9.9-eclipse-temurin-25
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
@@ -75,9 +70,22 @@ jobs:
           # Sonar necesita historia completa para blame/nuevo código
           fetch-depth: 0
 
-      - name: Build, test & analyze
+      # El runner (dev-vm) no tiene Maven y el usuario del sistema no tiene
+      # permisos para instalarlo ni para usar el socket de Docker
+      # directamente (por eso la función nativa "container:" de Actions no
+      # sirve aquí: el propio runner no puede hablarle al daemon). Sí existe
+      # un wrapper con sudo NOPASSWD que permite "docker run" con volúmenes,
+      # así que el contenedor se orquesta a mano a través de él.
+      - name: Build, test & analyze (en contenedor)
         if: ${{ vars.SONAR_HOST_URL != '' }}
-        run: >
-          mvn -B -ntp clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-          "-Dsonar.host.url=${{ vars.SONAR_HOST_URL }}"
-          "-Dsonar.token=${{ secrets.SONAR_TOKEN }}"
+        run: |
+          sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
+            -v "${{ github.workspace }}:/workspace" -w /workspace/backend \
+            -e SONAR_HOST_URL="$SONAR_HOST_URL" -e SONAR_TOKEN="$SONAR_TOKEN" \
+            eclipse-temurin:25 bash -s <<'SCRIPT'
+          set -e
+          apt-get update -qq
+          apt-get install -y -qq maven
+          mvn -B -ntp clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.host.url="$SONAR_HOST_URL" -Dsonar.token="$SONAR_TOKEN"
+          SCRIPT

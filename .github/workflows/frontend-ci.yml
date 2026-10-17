@@ -66,12 +66,6 @@ jobs:
     # no confiable en el runner self-hosted.
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: [self-hosted, dev-vm]
-    # Corre dentro de un contenedor Node: el runner (dev-vm) no tiene Node,
-    # pnpm ni Chrome instalados, y el usuario del sistema no tiene permisos
-    # para instalarlos. Dentro del contenedor somos root, así que Chromium
-    # se instala con apt sin pedirle nada a nadie.
-    container:
-      image: node:24-bookworm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,32 +73,37 @@ jobs:
           # Sonar necesita historia completa para blame/nuevo código
           fetch-depth: 0
 
-      - name: Instalar pnpm (corepack, viene con Node) y Chromium
-        run: |
-          corepack enable
-          corepack prepare pnpm@10 --activate
-          apt-get update -qq
-          apt-get install -y -qq chromium
-          echo "CHROME_BIN=$(which chromium)" >> "$GITHUB_ENV"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run unit tests with coverage
-        # Sin esto, Sonar nunca tiene un lcov.info que leer -- el dashboard
-        # mostraba 0.0% de coverage aunque los specs existieran, porque
-        # nunca se ejecutaban en CI. ChromeHeadless con --no-sandbox: dentro
-        # de un contenedor, corriendo como root, Chrome no arranca sin esa
-        # bandera. karma.conf.js registra el reporter "lcov" (Angular no lo
-        # incluye por defecto con --code-coverage).
-        run: pnpm exec ng test --watch=false --browsers=ChromeHeadlessNoSandbox --code-coverage
-
-      - name: SonarQube analysis
+      # El runner (dev-vm) no tiene Node, pnpm ni Chrome, y el usuario del
+      # sistema no tiene permisos para instalarlos ni para usar el socket de
+      # Docker directamente (por eso la función nativa "container:" de
+      # Actions no sirve: el propio runner no puede hablarle al daemon). Sí
+      # existe un wrapper con sudo NOPASSWD que permite "docker run" con
+      # volúmenes, así que el contenedor se orquesta a mano a través de él.
+      # Chrome no arranca como root sin --no-sandbox (karma.conf.js define
+      # el launcher ChromeHeadlessNoSandbox para este caso).
+      - name: Install, test & analyze (en contenedor)
         if: ${{ vars.SONAR_HOST_URL != '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-        # El action oficial sonarsource/sonarqube-scan-action requiere bash
-        # (falla en runners self-hosted de Windows sin WSL). @sonar/scan es
-        # el wrapper npm oficial de SonarSource: corre nativo sobre Node.
-        run: pnpm dlx @sonar/scan
+        run: |
+          sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
+            -v "${{ github.workspace }}:/workspace" -w /workspace/frontend \
+            -e SONAR_HOST_URL="$SONAR_HOST_URL" -e SONAR_TOKEN="$SONAR_TOKEN" \
+            node:24-bookworm bash -s <<'SCRIPT'
+          set -e
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          apt-get update -qq
+          apt-get install -y -qq chromium
+          export CHROME_BIN="$(which chromium)"
+          # Sin esto, Sonar nunca tiene un lcov.info que leer -- el
+          # dashboard mostraba 0.0% de coverage aunque los specs existieran,
+          # porque nunca se ejecutaban en CI.
+          pnpm install --frozen-lockfile
+          pnpm exec ng test --watch=false --browsers=ChromeHeadlessNoSandbox --code-coverage
+          # El action oficial sonarsource/sonarqube-scan-action requiere un
+          # runner con bash nativo tal como este, @sonar/scan es el wrapper
+          # npm oficial de SonarSource, corre sobre Node.
+          pnpm dlx @sonar/scan
+          SCRIPT
