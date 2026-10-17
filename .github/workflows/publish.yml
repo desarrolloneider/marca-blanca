@@ -1,16 +1,22 @@
 name: Build & Publish
 
 # Publica las imagenes Docker de backend y frontend a GitHub Container
-# Registry (GHCR) cuando se mergea a main -> eso es lo que consideramos
-# un release. No corre en develop ni en PRs: ahi ya corren los CI de
-# build+test+sonar, no hace falta publicar una imagen por cada commit.
+# Registry (GHCR):
+#   - main    -> tag "latest" + sha corto. Eso es lo que consideramos un
+#                release.
+#   - develop -> tag "dev" + sha corto, y ademas se despliega solo (sin
+#                aprobacion, DEV esta autoaprobado) en la VM compartida
+#                de desarrollo via el job "deploy-dev".
+# No corre en PRs: ahi ya corren los CI de build+test+sonar, no hace falta
+# publicar una imagen por cada commit de un PR todavia sin mergear.
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - "backend/**"
       - "frontend/**"
       - ".github/workflows/publish.yml"
+      - "infra/scripts/deploy-container.sh"
 
 permissions:
   contents: read
@@ -44,7 +50,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-backend
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/develop' }}
             type=sha,format=short
 
       - name: Build & push
@@ -77,7 +84,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-frontend
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/develop' }}
             type=sha,format=short
 
       - name: Build & push
@@ -89,3 +97,27 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-dev:
+    name: Desplegar en la VM de dev
+    needs: [publish-backend, publish-frontend]
+    # DEV esta autoaprobado (no necesita revision de arquitecto/Product
+    # Owner como QA o PROD) -- se despliega solo en cada push a develop.
+    if: github.ref == 'refs/heads/develop'
+    runs-on: [self-hosted, dev-vm]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login en GHCR (en la VM)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo /usr/local/bin/docker-rbac/devops-wrapper login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Desplegar backend
+        run: |
+          chmod +x infra/scripts/deploy-container.sh
+          infra/scripts/deploy-container.sh backend ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-backend:dev
+
+      - name: Desplegar frontend
+        run: |
+          infra/scripts/deploy-container.sh frontend ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-frontend:dev
