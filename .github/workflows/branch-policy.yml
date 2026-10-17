@@ -29,8 +29,12 @@ jobs:
           fi
 
           if [ "$BASE_REF" = "develop" ]; then
-            if [[ "$HEAD_REF" != feature/* ]] && [[ "$HEAD_REF" != bugfix/* ]] && [[ "$HEAD_REF" != hotfix/* ]] && [[ "$HEAD_REF" != docs/* ]] && [[ "$HEAD_REF" != chore/* ]] && [[ "$HEAD_REF" != refactor/* ]]; then
-              echo "::error::La rama '$HEAD_REF' no sigue la convención esperada para PRs a 'develop' (feature/*, bugfix/*, hotfix/*, docs/*, chore/* o refactor/*)."
+            # dependabot/* son las ramas que Dependabot genera solo
+            # (dependabot/maven/..., dependabot/npm_and_yarn/...) -- no
+            # siguen nuestra convencion porque no las escribe una persona,
+            # las arma GitHub con su propio esquema de nombres.
+            if [[ "$HEAD_REF" != feature/* ]] && [[ "$HEAD_REF" != bugfix/* ]] && [[ "$HEAD_REF" != hotfix/* ]] && [[ "$HEAD_REF" != docs/* ]] && [[ "$HEAD_REF" != chore/* ]] && [[ "$HEAD_REF" != refactor/* ]] && [[ "$HEAD_REF" != dependabot/* ]]; then
+              echo "::error::La rama '$HEAD_REF' no sigue la convención esperada para PRs a 'develop' (feature/*, bugfix/*, hotfix/*, docs/*, chore/*, refactor/* o dependabot/*)."
               exit 1
             fi
           fi
