@@ -1,0 +1,17 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    file_names: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+
+linter:
+  rules:
+    avoid_print: true
+    always_use_package_imports: true
+    avoid_relative_lib_imports: true
+    unawaited_futures: true
+    discarded_futures: true
