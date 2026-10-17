@@ -34,6 +34,16 @@ module.exports = function (config) {
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
+    // Chrome se niega a arrancar como root sin --no-sandbox (es el caso del
+    // job de Sonar en CI, que corre dentro de un contenedor Docker donde
+    // todo corre como root). ChromeHeadless normal sigue sirviendo para
+    // correr local, donde no hace falta este launcher.
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox', '--disable-gpu'],
+      },
+    },
     // browsers/singleRun/autoWatch/restartOnFileChange se dejan sin fijar
     // aca -- el builder de Angular (@angular-devkit/build-angular:karma)
     // los pisa segun los flags --browsers/--watch de "ng test"; fijarlos

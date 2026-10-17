@@ -60,12 +60,18 @@ jobs:
   sonar:
     name: SonarQube analysis
     needs: build
-    # Corre en el runner self-hosted porque SonarQube vive en localhost,
-    # solo alcanzable desde tu propia red/máquina.
+    # Corre en el runner self-hosted porque SonarQube vive en la red interna
+    # de la VM de dev (10.104.0.11), solo alcanzable desde ahí.
     # Nunca corre para PRs de forks externos: evita ejecutar código
-    # no confiable en el runner self-hosted (tu propia máquina).
+    # no confiable en el runner self-hosted.
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: [self-hosted, dev-vm]
+    # Corre dentro de un contenedor Node: el runner (dev-vm) no tiene Node,
+    # pnpm ni Chrome instalados, y el usuario del sistema no tiene permisos
+    # para instalarlos. Dentro del contenedor somos root, así que Chromium
+    # se instala con apt sin pedirle nada a nadie.
+    container:
+      image: node:24-bookworm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,17 +79,13 @@ jobs:
           # Sonar necesita historia completa para blame/nuevo código
           fetch-depth: 0
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Instalar pnpm (corepack, viene con Node) y Chromium
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          apt-get update -qq
+          apt-get install -y -qq chromium
+          echo "CHROME_BIN=$(which chromium)" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -91,10 +93,11 @@ jobs:
       - name: Run unit tests with coverage
         # Sin esto, Sonar nunca tiene un lcov.info que leer -- el dashboard
         # mostraba 0.0% de coverage aunque los specs existieran, porque
-        # nunca se ejecutaban en CI. ChromeHeadless: el runner no tiene
-        # display; karma.conf.js registra el reporter "lcov" (Angular no lo
+        # nunca se ejecutaban en CI. ChromeHeadless con --no-sandbox: dentro
+        # de un contenedor, corriendo como root, Chrome no arranca sin esa
+        # bandera. karma.conf.js registra el reporter "lcov" (Angular no lo
         # incluye por defecto con --code-coverage).
-        run: pnpm exec ng test --watch=false --browsers=ChromeHeadless --code-coverage
+        run: pnpm exec ng test --watch=false --browsers=ChromeHeadlessNoSandbox --code-coverage
 
       - name: SonarQube analysis
         if: ${{ vars.SONAR_HOST_URL != '' }}
