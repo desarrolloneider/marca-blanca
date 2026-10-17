@@ -116,5 +116,11 @@ jobs:
           # El action oficial sonarsource/sonarqube-scan-action requiere un
           # runner con bash nativo tal como este, @sonar/scan es el wrapper
           # npm oficial de SonarSource, corre sobre Node.
-          pnpm dlx @sonar/scan
+          # -D sonar.qualitygate.wait=true: sin esto, el scanner manda el
+          # analisis y sigue sin importar el resultado -- el Quality Gate no
+          # bloqueaba nada, solo quedaba como dato en el dashboard. Con esto
+          # el paso espera la respuesta de SonarQube y falla si el gate
+          # queda en rojo (una de las 5 puertas del CLAUDE.md antes de
+          # fusionar).
+          pnpm dlx @sonar/scan -Dsonar.qualitygate.wait=true
           SCRIPT
