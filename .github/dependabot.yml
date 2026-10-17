@@ -1,0 +1,41 @@
+version: 2
+
+updates:
+  # Dependencias Java (pom.xml padre + todos los modulos del reactor:
+  # shared-kernel, usuarios-*, omnicanal-*, bootstrap, etc. -- Dependabot
+  # los detecta solos a partir del pom.xml raiz).
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    labels: [dependencies, backend]
+
+  # Dependencias de Node/Angular (pnpm-lock.yaml).
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    labels: [dependencies, frontend]
+
+  # Imagenes base de los Dockerfile (eclipse-temurin, nginx, etc.).
+  - package-ecosystem: docker
+    directory: /backend
+    schedule:
+      interval: weekly
+    labels: [dependencies, docker]
+
+  - package-ecosystem: docker
+    directory: /frontend
+    schedule:
+      interval: weekly
+    labels: [dependencies, docker]
+
+  # Versiones de las actions usadas en los workflows (actions/checkout@v4,
+  # docker/build-push-action@v6, etc.).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies, ci]

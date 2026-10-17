@@ -1,0 +1,26 @@
+name: Respaldo de la plataforma DevOps
+
+# Respalda la base de datos de SonarQube y el registro del runner
+# self-hosted (C-52) -- ver infra/scripts/backup-devops.sh para el detalle
+# de que cubre y que no. Semanal, los domingos a las 3am, mas la opcion de
+# correrlo a mano desde la pestaña Actions cuando haga falta.
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Respaldar SonarQube y el runner
+    runs-on: [self-hosted, dev-vm]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Respaldar
+        run: |
+          chmod +x infra/scripts/backup-devops.sh
+          infra/scripts/backup-devops.sh

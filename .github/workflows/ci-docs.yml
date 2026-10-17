@@ -1,0 +1,82 @@
+name: Documentación obligatoria
+
+# Si un PR toca una ruta sensible sin tocar tambien su documentacion
+# correspondiente en /docs, avisa con un comentario (no bloquea todavia).
+# Rampa de adopcion acordada: el primer mes solo advierte; pasado ese
+# periodo, este job pasa a bloquear (quitar el "continue-on-error" de
+# abajo y el "if: always()" del comentario de aviso).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  verificar-documentacion:
+    name: Verificar que la doc acompañe el cambio
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detectar rutas sensibles y su doc correspondiente
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend_code:
+              - 'backend/**/*-domain/**'
+              - 'backend/**/*-application/**'
+              - 'backend/**/*-infrastructure/**'
+            backend_doc:
+              - 'docs/backend/**'
+            frontend_code:
+              - 'frontend/src/**'
+            frontend_doc:
+              - 'docs/frontend/**'
+            infra_code:
+              - '.github/workflows/**'
+              - 'infra/**'
+              - 'docker-compose.yml'
+              - 'backend/Dockerfile'
+              - 'frontend/Dockerfile'
+            infra_doc:
+              - 'docs/infraestructura/**'
+            db_code:
+              - 'backend/bootstrap/src/main/resources/db/changelog/**'
+            db_doc:
+              - 'docs/base-de-datos/**'
+
+      - name: Avisar si falta documentación (no bloquea todavía)
+        if: always()
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          BACKEND_SIN_DOC: ${{ steps.filter.outputs.backend_code == 'true' && steps.filter.outputs.backend_doc != 'true' }}
+          FRONTEND_SIN_DOC: ${{ steps.filter.outputs.frontend_code == 'true' && steps.filter.outputs.frontend_doc != 'true' }}
+          INFRA_SIN_DOC: ${{ steps.filter.outputs.infra_code == 'true' && steps.filter.outputs.infra_doc != 'true' }}
+          DB_SIN_DOC: ${{ steps.filter.outputs.db_code == 'true' && steps.filter.outputs.db_doc != 'true' }}
+        with:
+          script: |
+            const faltantes = [];
+            if (process.env.BACKEND_SIN_DOC === 'true') faltantes.push('- Cambiaste código de dominio/aplicación/infraestructura del backend, pero nada en `docs/backend/**`.');
+            if (process.env.FRONTEND_SIN_DOC === 'true') faltantes.push('- Cambiaste `frontend/src/**`, pero nada en `docs/frontend/**`.');
+            if (process.env.INFRA_SIN_DOC === 'true') faltantes.push('- Cambiaste workflows, infraestructura o Dockerfiles, pero nada en `docs/infraestructura/**`.');
+            if (process.env.DB_SIN_DOC === 'true') faltantes.push('- Cambiaste el changelog de Liquibase, pero nada en `docs/base-de-datos/**`.');
+            if (faltantes.length === 0) return;
+            const cuerpo = [
+              '### 📚 Falta documentación para este cambio',
+              '',
+              ...faltantes,
+              '',
+              '_Por ahora esto es solo un aviso (rampa de adopción del primer mes). Pasado ese periodo, este check bloqueará el merge si no se corrige._',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: cuerpo,
+            });
