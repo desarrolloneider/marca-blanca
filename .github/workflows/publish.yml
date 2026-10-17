@@ -37,6 +37,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # El driver "docker" por defecto no soporta exportar cache hacia GitHub
+      # Actions (cache-to: type=gha) -- falla con "Cache export is not
+      # supported for the docker driver". El driver "docker-container" si.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Login en GHCR
         uses: docker/login-action@v3
         with:
@@ -70,6 +76,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # El driver "docker" por defecto no soporta exportar cache hacia GitHub
+      # Actions (cache-to: type=gha) -- falla con "Cache export is not
+      # supported for the docker driver". El driver "docker-container" si.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login en GHCR
         uses: docker/login-action@v3
