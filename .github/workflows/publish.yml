@@ -80,7 +80,7 @@ jobs:
       # no se frena la primera corrida por el volumen de hallazgos HIGH que
       # suele traer una imagen que nunca se habia escaneado.
       - name: Trivy -- bloquear por CRITICAL
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-backend@${{ steps.build.outputs.digest }}
           format: table
@@ -91,7 +91,7 @@ jobs:
 
       - name: Trivy -- reportar HIGH (no bloquea)
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-backend@${{ steps.build.outputs.digest }}
           format: table
@@ -143,7 +143,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trivy -- bloquear por CRITICAL
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-frontend@${{ steps.build.outputs.digest }}
           format: table
@@ -154,7 +154,7 @@ jobs:
 
       - name: Trivy -- reportar HIGH (no bloquea)
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/marca-blanca-frontend@${{ steps.build.outputs.digest }}
           format: table
