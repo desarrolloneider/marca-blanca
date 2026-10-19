@@ -1,0 +1,184 @@
+name: CI
+
+# Orquestador unico: un solo job detecta UNA vez si cambio backend/**,
+# frontend/**, o los dos, y dispara solo el/los pipeline(s) que
+# corresponda(n). Antes esto vivian en dos workflows separados
+# (backend-ci.yml, frontend-ci.yml), cada uno con su propio job
+# "Detectar cambios" -- duplicaba el checkout+deteccion sin necesidad.
+#
+# Tambien se unifica build+test+Sonar en un solo job por lado (antes eran
+# 2 jobs separados que cada uno volvia a instalar todo desde cero en su
+# propio contenedor -- "pnpm install"/"mvn clean verify" corrian 2 veces
+# completas por PR). mvn clean verify + el goal de sonar ya corren las
+# pruebas como parte del mismo comando, asi que no hace falta un paso de
+# build aparte antes del de Sonar.
+#
+# Solo corre en el PR, no otra vez al mergear a main/develop -- si el PR
+# ya paso con ese codigo exacto, repetirlo en el merge es trabajo
+# duplicado, no una verificacion adicional real.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cambios:
+    name: Detectar cambios
+    runs-on: [self-hosted, dev-vm]
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detectar que cambio
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/ci.yml'
+
+  backend:
+    name: Backend (build, test y Sonar)
+    needs: cambios
+    # "skipped" (si no cambio nada de backend) cuenta como exito para un
+    # check obligatorio -- el PR no se queda esperando un resultado que
+    # nunca llega. El job entero corre en dev-vm (no solo el paso de
+    # Sonar), asi que tambien se evita correrlo para PRs de forks
+    # externos: ejecutar codigo no confiable en el runner self-hosted de
+    # la empresa seria el riesgo, con o sin secrets de por medio.
+    if: needs.cambios.outputs.backend == 'true' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: [self-hosted, dev-vm]
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Sonar necesita historia completa para blame/nuevo código
+          fetch-depth: 0
+
+      # El runner (dev-vm) no tiene Maven y el usuario del sistema no tiene
+      # permisos para instalarlo ni para usar el socket de Docker
+      # directamente (por eso la función nativa "container:" de Actions no
+      # sirve aquí). Sí existe un wrapper con sudo NOPASSWD que permite
+      # "docker run" con volúmenes, así que el contenedor se orquesta a
+      # mano a través de él.
+      - name: Build, test y analizar (en contenedor)
+        run: |
+          sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
+            -v "${{ github.workspace }}:/workspace" -w /workspace/backend \
+            -e SONAR_HOST_URL="$SONAR_HOST_URL" -e SONAR_TOKEN="$SONAR_TOKEN" \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+            eclipse-temurin:25 bash -s <<'SCRIPT'
+          set -e
+          # Todo dentro del contenedor corre como root (hace falta para el
+          # apt-get). Sin esto, los archivos que Maven genera (target/,
+          # .m2/) quedan con dueño root en el workspace compartido del
+          # runner, y el siguiente checkout -- que corre como el usuario
+          # real de la VM, no root -- no los puede borrar ni sobreescribir
+          # (EACCES: permission denied).
+          trap 'chown -R "$HOST_UID:$HOST_GID" /workspace' EXIT
+          apt-get update -qq
+          apt-get install -y -qq maven
+          if [ -n "$SONAR_HOST_URL" ]; then
+            # clean verify + el goal de sonar en un solo comando: ya
+            # corre las pruebas como parte del build, no hace falta un
+            # paso de "build & test" separado antes de este.
+            # -Dsonar.qualitygate.wait=true: el paso espera la respuesta
+            # real de SonarQube y falla si el Quality Gate queda en rojo
+            # (una de las 5 puertas del CLAUDE.md antes de fusionar), en
+            # vez de mandar el analisis y seguir sin importar el resultado.
+            mvn -B -ntp clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.host.url="$SONAR_HOST_URL" -Dsonar.token="$SONAR_TOKEN" \
+              -Dsonar.qualitygate.wait=true
+          else
+            mvn -B -ntp clean verify
+          fi
+          SCRIPT
+
+      - name: Publicar reporte de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-surefire-reports
+          path: backend/**/target/surefire-reports/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  frontend:
+    name: Frontend (build, test y Sonar)
+    needs: cambios
+    # Mismo motivo que el job de backend: el job entero corre en dev-vm,
+    # asi que se evita correrlo para PRs de forks externos.
+    if: needs.cambios.outputs.frontend == 'true' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: [self-hosted, dev-vm]
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Sonar necesita historia completa para blame/nuevo código
+          fetch-depth: 0
+
+      # El runner (dev-vm) no tiene Node, pnpm ni Chrome, y el usuario del
+      # sistema no tiene permisos para instalarlos ni para usar el socket
+      # de Docker directamente. Chrome no arranca como root sin
+      # --no-sandbox (karma.conf.js define el launcher
+      # ChromeHeadlessNoSandbox para este caso).
+      - name: Install, build, test y analizar (en contenedor)
+        run: |
+          sudo /usr/local/bin/docker-rbac/devops-wrapper run --rm -i \
+            -v "${{ github.workspace }}:/workspace" -w /workspace/frontend \
+            -e SONAR_HOST_URL="$SONAR_HOST_URL" -e SONAR_TOKEN="$SONAR_TOKEN" \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+            node:24-bookworm bash -s <<'SCRIPT'
+          set -e
+          trap 'chown -R "$HOST_UID:$HOST_GID" /workspace' EXIT
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm install --frozen-lockfile
+          pnpm exec ng build --configuration production
+          if [ -n "$SONAR_HOST_URL" ]; then
+            apt-get update -qq
+            apt-get install -y -qq chromium
+            export CHROME_BIN="$(which chromium)"
+            # Sin esto, Sonar nunca tiene un lcov.info que leer -- el
+            # dashboard mostraba 0.0% de coverage aunque los specs
+            # existieran, porque nunca se ejecutaban en CI.
+            pnpm exec ng test --watch=false --browsers=ChromeHeadlessNoSandbox --code-coverage
+            # -D sonar.qualitygate.wait=true: el paso espera la respuesta
+            # real de SonarQube y falla si el Quality Gate queda en rojo,
+            # en vez de mandar el analisis y seguir sin importar el
+            # resultado.
+            pnpm dlx @sonar/scan -Dsonar.qualitygate.wait=true
+          fi
+          SCRIPT
+
+      - name: Subir build de producción
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/mi-proyecto-frontend
+          retention-days: 7

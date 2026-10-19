@@ -24,7 +24,7 @@ Reglas aprendidas durante el desarrollo inicial del backend, después de varios 
 
 - Van siempre contra `develop`, nunca contra `main`.
 - **Nunca fusionar `main` hacia `develop`** ni viceversa fuera del flujo normal — ver el postmortem `docs/postmortems/2026-09-01-0001-perdida-estructura-por-merge-cruzado.md` para el incidente real que esto causó.
-- Revisar que los checks de CI (`backend-ci.yml`: build + SonarQube, `branch-policy.yml`: nombre de rama) estén en verde antes de fusionar.
+- Revisar que los checks de CI (`ci.yml`: build + SonarQube de backend y/o frontend según qué cambió, `branch-policy.yml`: nombre de rama) estén en verde antes de fusionar.
 
 ## Identidad de commits
 

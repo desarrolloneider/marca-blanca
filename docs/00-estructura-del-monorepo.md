@@ -7,8 +7,8 @@ documentación enlazada abajo.
 ## Por qué monorepo (por ahora)
 
 El backend (Java/Spring Boot) y el frontend (Angular) viven en el mismo
-repositorio, con CI/CD independiente para cada uno (`backend-ci.yml`,
-`frontend-ci.yml`, con `paths` filtrados). No hay plan activo de separarlos
+repositorio, con un solo workflow orquestador (`ci.yml`) que detecta qué
+cambió y corre el pipeline de backend, el de frontend, o los dos. No hay plan activo de separarlos
 en repos distintos ni de migrar a microservicios — se probó como experimento
 local puntual (extraer `usuarios` a un microservicio standalone) y se decidió
 seguir en monorepo mientras el equipo sea chico. Si esto cambia, se
