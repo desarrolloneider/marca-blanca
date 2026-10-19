@@ -1,0 +1,158 @@
+name: PR Pipeline
+
+# Orquestador unico del PR, en orden estricto: 1) rama -> 2) documentacion ->
+# 3) detectar backend/frontend -> 4) CI del lado que corresponda.
+# Cada job declara "needs" del anterior: si uno falla, GitHub marca los
+# siguientes como "skipped" y no los ejecuta -- no tiene sentido correr
+# Sonar/tests de un PR cuya rama ya es invalida.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-pipeline-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1. Rama de origen valida (antes: branch-policy.yml)
+  rama:
+    name: "1. Validar rama de origen"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar origen del PR
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "PR: $HEAD_REF -> $BASE_REF"
+
+          if [ "$BASE_REF" = "main" ]; then
+            if [ "$HEAD_REF" != "develop" ] && [[ "$HEAD_REF" != hotfix/* ]]; then
+              echo "::error::No se permiten PRs directos a 'main' desde '$HEAD_REF'. Solo se acepta 'develop' o ramas 'hotfix/*'."
+              exit 1
+            fi
+          fi
+
+          if [ "$BASE_REF" = "develop" ]; then
+            if [[ "$HEAD_REF" != feature/* ]] && [[ "$HEAD_REF" != bugfix/* ]] && [[ "$HEAD_REF" != hotfix/* ]] && [[ "$HEAD_REF" != docs/* ]] && [[ "$HEAD_REF" != chore/* ]] && [[ "$HEAD_REF" != refactor/* ]] && [[ "$HEAD_REF" != dependabot/* ]]; then
+              echo "::error::La rama '$HEAD_REF' no sigue la convención esperada para PRs a 'develop' (feature/*, bugfix/*, hotfix/*, docs/*, chore/*, refactor/* o dependabot/*)."
+              exit 1
+            fi
+          fi
+
+          echo "OK: origen de PR válido."
+
+  # 2. Documentacion acompañando el cambio (antes: ci-docs.yml). Rampa de
+  # adopcion: solo avisa (continue-on-error), no bloquea todavia.
+  documentacion:
+    name: "2. Verificar documentación"
+    needs: rama
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detectar rutas sensibles y su doc correspondiente
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend_code:
+              - 'backend/**/*-domain/**'
+              - 'backend/**/*-application/**'
+              - 'backend/**/*-infrastructure/**'
+            backend_doc:
+              - 'docs/backend/**'
+            frontend_code:
+              - 'frontend/src/**'
+            frontend_doc:
+              - 'docs/frontend/**'
+            infra_code:
+              - '.github/workflows/**'
+              - 'infra/**'
+              - 'docker-compose.yml'
+              - 'backend/Dockerfile'
+              - 'frontend/Dockerfile'
+            infra_doc:
+              - 'docs/infraestructura/**'
+            db_code:
+              - 'backend/bootstrap/src/main/resources/db/changelog/**'
+            db_doc:
+              - 'docs/base-de-datos/**'
+
+      - name: Avisar si falta documentación (no bloquea todavía)
+        if: always()
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          BACKEND_SIN_DOC: ${{ steps.filter.outputs.backend_code == 'true' && steps.filter.outputs.backend_doc != 'true' }}
+          FRONTEND_SIN_DOC: ${{ steps.filter.outputs.frontend_code == 'true' && steps.filter.outputs.frontend_doc != 'true' }}
+          INFRA_SIN_DOC: ${{ steps.filter.outputs.infra_code == 'true' && steps.filter.outputs.infra_doc != 'true' }}
+          DB_SIN_DOC: ${{ steps.filter.outputs.db_code == 'true' && steps.filter.outputs.db_doc != 'true' }}
+        with:
+          script: |
+            const faltantes = [];
+            if (process.env.BACKEND_SIN_DOC === 'true') faltantes.push('- Cambiaste código de dominio/aplicación/infraestructura del backend, pero nada en `docs/backend/**`.');
+            if (process.env.FRONTEND_SIN_DOC === 'true') faltantes.push('- Cambiaste `frontend/src/**`, pero nada en `docs/frontend/**`.');
+            if (process.env.INFRA_SIN_DOC === 'true') faltantes.push('- Cambiaste workflows, infraestructura o Dockerfiles, pero nada en `docs/infraestructura/**`.');
+            if (process.env.DB_SIN_DOC === 'true') faltantes.push('- Cambiaste el changelog de Liquibase, pero nada en `docs/base-de-datos/**`.');
+            if (faltantes.length === 0) return;
+            const cuerpo = [
+              '### 📚 Falta documentación para este cambio',
+              '',
+              ...faltantes,
+              '',
+              '_Por ahora esto es solo un aviso (rampa de adopción del primer mes). Pasado ese periodo, este check bloqueará el merge si no se corrige._',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: cuerpo,
+            });
+
+  # 3. Que lado cambio: backend, frontend, o ambos.
+  cambios:
+    name: "3. Identificar backend/frontend"
+    needs: documentacion
+    runs-on: [self-hosted, dev-vm]
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detectar que cambio
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/pr-pipeline.yml'
+              - '.github/workflows/backend-ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/pr-pipeline.yml'
+              - '.github/workflows/frontend-ci.yml'
+
+  # 4. CI del lado correspondiente (reusable workflows, misma logica de
+  # siempre -- build/test/Sonar). Si "cambios" fallo, estos no corren.
+  backend:
+    name: "4. Backend CI"
+    needs: cambios
+    if: needs.cambios.outputs.backend == 'true'
+    uses: ./.github/workflows/backend-ci.yml
+    secrets: inherit
+
+  frontend:
+    name: "4. Frontend CI"
+    needs: cambios
+    if: needs.cambios.outputs.frontend == 'true'
+    uses: ./.github/workflows/frontend-ci.yml
+    secrets: inherit
