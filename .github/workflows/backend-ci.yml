@@ -39,10 +39,10 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Detectar si cambio backend/**
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             backend:
@@ -61,7 +61,7 @@ jobs:
     runs-on: [self-hosted, dev-vm]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build & test (en contenedor)
         run: |
@@ -78,7 +78,7 @@ jobs:
 
       - name: Publish test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-surefire-reports
           path: backend/**/target/surefire-reports/**
@@ -99,7 +99,7 @@ jobs:
       SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Sonar necesita historia completa para blame/nuevo código
           fetch-depth: 0
